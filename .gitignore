@@ -1,3 +1,8 @@
+
+# === Env and Secrets ===
+.env
+.env.*
+!.env.example
 # === Logs ===
 logs/
 *.log
@@ -27,10 +32,6 @@ out/
 *.sln
 *.sw?
 
-# === Env and Secrets ===
-.env
-.env.*
-!.env.example
 
 # === Lock Files ===
 bun.lockb
