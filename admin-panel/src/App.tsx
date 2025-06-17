@@ -1,5 +1,4 @@
-
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -58,6 +57,13 @@ const queryClient = new QueryClient({
   },
 });
 
+const allowedRoles = ["admin", "superadmin", "editor"];
+
+function isLoggedIn() {
+  const role = localStorage.getItem('user_role');
+  return allowedRoles.includes(role);
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -65,8 +71,17 @@ function App() {
         <Router>
           <ScrollToTop />
           <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Home />} />
+            {/* Force root to /auth or /admin */}
+            <Route
+              path="/"
+              element={
+                isLoggedIn()
+                  ? <Navigate to="/admin" replace />
+                  : <Navigate to="/auth" replace />
+              }
+            />
+
+            {/* Public Routes (can remove if you want only admin) */}
             <Route path="/about" element={<About />} />
             <Route path="/listings" element={<Listings />} />
             <Route path="/properties" element={<Properties />} />
@@ -92,7 +107,7 @@ function App() {
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/contact-page" element={<ContactPage />} />
             
-            {/* Auth Routes */}
+            {/* Auth Route always accessible */}
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/access-denied" element={<AccessDenied />} />
             
@@ -100,7 +115,7 @@ function App() {
             <Route
               path="/admin"
               element={
-                <ProtectedRoute allowedRoles={["admin", "superadmin", "editor"]}>
+                <ProtectedRoute allowedRoles={allowedRoles}>
                   <AdminLayout />
                 </ProtectedRoute>
               }
@@ -108,7 +123,7 @@ function App() {
               <Route
                 index
                 element={
-                  <ProtectedRoute allowedRoles={["admin", "superadmin", "editor"]}>
+                  <ProtectedRoute allowedRoles={allowedRoles}>
                     <AdminDashboard />
                   </ProtectedRoute>
                 }
@@ -116,7 +131,7 @@ function App() {
               <Route
                 path="properties"
                 element={
-                  <ProtectedRoute allowedRoles={["admin", "superadmin", "editor"]}>
+                  <ProtectedRoute allowedRoles={allowedRoles}>
                     <AdminProperties />
                   </ProtectedRoute>
                 }
@@ -124,7 +139,7 @@ function App() {
               <Route
                 path="inquiries"
                 element={
-                  <ProtectedRoute allowedRoles={["admin", "superadmin", "editor"]}>
+                  <ProtectedRoute allowedRoles={allowedRoles}>
                     <AdminInquiries />
                   </ProtectedRoute>
                 }
@@ -148,7 +163,7 @@ function App() {
               <Route
                 path="images"
                 element={
-                  <ProtectedRoute allowedRoles={["admin", "superadmin", "editor"]}>
+                  <ProtectedRoute allowedRoles={allowedRoles}>
                     <AdminImages />
                   </ProtectedRoute>
                 }
@@ -163,7 +178,7 @@ function App() {
               />
             </Route>
             
-            {/* 404 Route */}
+            {/* 404 Not Found */}
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster />
@@ -171,7 +186,6 @@ function App() {
         </Router>
       </AuthProvider>
     </QueryClientProvider>
-    
   );
 }
 
