@@ -1,0 +1,58 @@
+# === Logs ===
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# === Node Modules and Build Output ===
+node_modules/
+dist/
+dist-ssr/
+build/
+.cache/
+.next/
+out/
+
+# === Editor and OS Files ===
+.vscode/
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# === Env and Secrets ===
+.env
+.env.*
+!.env.example
+
+# === Lock Files ===
+bun.lockb
+pnpm-lock.yaml
+yarn.lock
+
+# === Supabase (if used) ===
+.supabase/
+*.sqlite
+
+# === Python (if any scripts) ===
+*.pyc
+__pycache__/
+
+# === Test/Temp ===
+coverage/
+*.test.*
+__tests__/
+
+# === Misc/Temp ===
+tmp/
+temp/
+*.bak
+*.old
+*.orig
