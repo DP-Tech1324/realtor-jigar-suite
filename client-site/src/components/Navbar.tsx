@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -13,66 +13,62 @@ import {
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 
-// ----- CONFIGURE AGENT INFO -----
-const AGENT_TAGLINE = "Your Trusted GTA Realtor";
-const AGENT_AVATAR_URL = "/client-site/public/images/agents/IMG_9799.JPG"; // Place your agent photo here!
+// --- NAVIGATION ITEMS ---
+const navigationItems = [
+  {
+    title: "Home",
+    items: [
+      { title: "Home", href: "/", description: "Homepage", icon: Home },
+    ],
+  },
+  {
+    title: "Listings",
+    items: [
+      { title: "Search Properties", href: "/search", description: "Find your dream home", icon: Search },
+      { title: "Featured Listings", href: "/#listings", description: "Handpicked properties", icon: TrendingUp },
+      { title: "Saved Properties", href: "/favorites", description: "Your favorites", icon: Bookmark, requiresAuth: true },
+    ],
+  },
+  {
+    title: "Buyers",
+    items: [
+      { title: "Buyers Guide", href: "/buyers", description: "Complete buying guide", icon: Users },
+      { title: "Financing Options", href: "/buyers/financing-options", description: "Mortgage & financing info", icon: Calculator },
+      { title: "First-Time Buyers", href: "/buyers/first-time-guide", description: "For first-time buyers", icon: Home },
+      { title: "Buying Process", href: "/buyers/home-buying-process", description: "How to buy a home", icon: FileText },
+    ],
+  },
+  {
+    title: "Sellers",
+    items: [
+      { title: "Sellers Guide", href: "/sellers", description: "Complete selling guide", icon: TrendingUp },
+      { title: "Home Valuation", href: "/sellers/valuation", description: "Get your home's value", icon: Calculator },
+      { title: "Marketing Strategy", href: "/sellers/marketing-strategy", description: "How we market your home", icon: Users },
+      { title: "Staging Tips", href: "/sellers/staging-tips", description: "Prepare for sale", icon: Home },
+    ],
+  },
+  {
+    title: "Map Search",
+    items: [
+      { title: "Map Search", href: "/map-search", description: "Search by map", icon: MapPin },
+    ],
+  },
+  {
+    title: "Useful Tools",
+    items: [
+      { title: "Calculators", href: "/calculators", description: "Financial tools", icon: Calculator },
+      { title: "Blog & Articles", href: "/blog", description: "Market insights", icon: FileText },
+      { title: "FAQ", href: "/faq", description: "Frequently asked questions", icon: HelpCircle },
+      { title: "Tools", href: "/tools", description: "All property tools" },
+    ],
+  },
+];
 
-const Header = () => {
+const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, signOut, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
-  // ----- MAIN NAVIGATION -----
-  const navigationItems = [
-    {
-      title: "Home",
-      items: [
-        { title: "Home", href: "/", description: "Homepage", icon: Home },
-      ],
-    },
-    {
-      title: "Listings",
-      items: [
-        { title: "Search Properties", href: "/search", description: "Find your dream home", icon: Search },
-        { title: "Featured Listings", href: "/#listings", description: "Handpicked properties", icon: TrendingUp },
-        { title: "Saved Properties", href: "/favorites", description: "Your favorites", icon: Bookmark, requiresAuth: true },
-      ],
-    },
-    {
-      title: "Buyers",
-      items: [
-        { title: "Buyers Guide", href: "/buyers", description: "Complete buying guide", icon: Users },
-        { title: "Financing Options", href: "/buyers/financing-options", description: "Mortgage & financing info", icon: Calculator },
-        { title: "First-Time Buyers", href: "/buyers/first-time-guide", description: "For first-time buyers", icon: Home },
-        { title: "Buying Process", href: "/buyers/home-buying-process", description: "How to buy a home", icon: FileText },
-      ],
-    },
-    {
-      title: "Sellers",
-      items: [
-        { title: "Sellers Guide", href: "/sellers", description: "Complete selling guide", icon: TrendingUp },
-        { title: "Home Valuation", href: "/sellers/valuation", description: "Get your home's value", icon: Calculator },
-        { title: "Marketing Strategy", href: "/sellers/marketing-strategy", description: "How we market your home", icon: Users },
-        { title: "Staging Tips", href: "/sellers/staging-tips", description: "Prepare for sale", icon: Home },
-      ],
-    },
-    {
-      title: "Map Search",
-      items: [
-        { title: "Map Search", href: "/map-search", description: "Search by map", icon: MapPin },
-      ],
-    },
-    {
-      title: "Useful Tools",
-      items: [
-        { title: "Calculators", href: "/calculators", description: "Financial tools", icon: Calculator },
-        { title: "Blog & Articles", href: "/blog", description: "Market insights", icon: FileText },
-        { title: "FAQ", href: "/faq", description: "Frequently asked questions", icon: HelpCircle },
-        { title: "Tools", href: "/tools", description: "All property tools" },
-      ],
-    },
-  ];
 
   const isActivePath = (path: string) => {
     if (path === "/#listings") return false;
@@ -122,7 +118,7 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+    <nav className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
       {/* Top Contact Bar */}
       <div className="bg-slate-900 text-white py-2 px-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center text-sm">
@@ -142,27 +138,11 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Main header */}
+      {/* NAVIGATION ONLY, NO AGENT BLOCK */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-24">
-          {/* Agent Avatar + Branding */}
-          <Link to="/" className="flex items-center space-x-4 group">
-            {/* Agent Photo */}
-            <img
-              src={AGENT_AVATAR_URL}
-              alt="Agent"
-              className="w-14 h-14 rounded-full object-cover border-2 border-blue-600 shadow-md"
-            />
-            {/* Brand, tagline */}
-            <div>
-              <div className="text-2xl font-bold text-slate-900 leading-tight">Jigar Patel</div>
-              <div className="text-blue-600 font-semibold text-base leading-snug">Real Estate</div>
-              <div className="text-slate-500 text-sm">{AGENT_TAGLINE}</div>
-            </div>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden lg:block">
+        <div className="flex justify-between items-center h-16">
+          {/* Navigation */}
+          <div className="w-full">
             <NavigationMenu>
               <NavigationMenuList className="space-x-2">
                 {navigationItems.map((section) => (
@@ -208,7 +188,6 @@ const Header = () => {
 
           {/* User Menu & Mobile Menu */}
           <div className="flex items-center space-x-4">
-            {/* User menu for desktop */}
             {user ? (
               <div className="hidden lg:flex items-center space-x-4">
                 <Button
@@ -259,23 +238,6 @@ const Header = () => {
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] sm:w-[400px] p-0">
                 <div className="flex flex-col h-full">
-                  {/* Header */}
-                  <div className="p-6 border-b border-slate-200">
-                    <div className="flex items-center space-x-3">
-                      <img
-                        src={AGENT_AVATAR_URL}
-                        alt="Agent"
-                        className="w-10 h-10 rounded-full object-cover border-2 border-blue-600"
-                      />
-                      <div>
-                        <div className="font-bold text-slate-900">Jigar Patel</div>
-                        <div className="text-sm text-blue-600">Real Estate</div>
-                        <div className="text-slate-500 text-xs">{AGENT_TAGLINE}</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Navigation */}
                   <div className="flex-1 overflow-y-auto p-6">
                     <nav className="space-y-6">
                       {navigationItems.map((section) => (
@@ -307,8 +269,6 @@ const Header = () => {
                       ))}
                     </nav>
                   </div>
-
-                  {/* Footer */}
                   <div className="p-6 border-t border-slate-200 space-y-4">
                     {user ? (
                       <div className="space-y-2">
@@ -378,8 +338,8 @@ const Header = () => {
           </div>
         </div>
       </div>
-    </header>
+    </nav>
   );
 };
 
-export default Header;
+export default Navbar;

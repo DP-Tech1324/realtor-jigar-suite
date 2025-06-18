@@ -1,11 +1,10 @@
-
-import Header from "@/components/Header";
+import React from "react";
+import { useState } from "react";
 import Hero from "@/components/Hero";
 import FeaturedListings from "@/components/FeaturedListings";
 import DualCTA from "@/components/DualCTA";
 import BioSection from "@/components/BioSection";
-import Testimonials from "@/components/Testimonials";
-import PropertySearch from "@/components/PropertySearch";
+
 import NewsletterSignup from "@/components/NewsletterSignup";
 import InquiryForm from "@/components/InquiryForm";
 import Footer from "@/components/Footer";
@@ -23,17 +22,17 @@ const Index = () => {
   const stats = [
     { icon: TrendingUp, value: "500+", label: "Properties Sold" },
     { icon: Users, value: "400+", label: "Happy Families" },
-    { icon: Calculator, value: "15+", label: "Years Experience" },
+    { icon: Calculator, value: "5+", label: "Years Experience" },
     { icon: Star, value: "5.0", label: "Client Rating" },
   ];
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
-      
-      {/* Hero Section */}
-      <Hero />
 
+      
+      
+      {/* Hero Search Section */}
+        <Hero />
       {/* Quick Stats Section */}
       <section className="py-16 bg-white relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -52,7 +51,7 @@ const Index = () => {
       </section>
 
       {/* Property Search Component */}
-      <section className="py-16 bg-gradient-to-br from-slate-50 to-blue-50">
+     {/*<section className="py-16 bg-gradient-to-br from-slate-50 to-blue-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 animate-fade-in">
             <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
@@ -64,7 +63,7 @@ const Index = () => {
           </div>
           <PropertySearch onSearch={handleSearch} />
         </div>
-      </section>
+      </section> */}
 
       {/* Featured Listings */}
       <FeaturedListings />
@@ -76,10 +75,10 @@ const Index = () => {
       <BioSection />
 
       {/* Testimonials */}
-      <Testimonials />
+      {/*<Testimonials />*/}
 
       {/* Service Areas Section */}
-      <section className="py-20 bg-white">
+      {/*<section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16 animate-fade-in">
             <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
@@ -120,7 +119,7 @@ const Index = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section>*/}
 
       {/* Newsletter Signup */}
       <NewsletterSignup />

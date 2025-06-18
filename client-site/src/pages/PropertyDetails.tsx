@@ -1,7 +1,5 @@
-
 import { useParams, Link } from "react-router-dom";
 import { useState } from "react";
-import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -49,7 +47,6 @@ const PropertyDetails = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white">
-        <Header />
         <div className="max-w-7xl mx-auto px-4 py-8">
           <Skeleton className="h-64 md:h-96 w-full mb-8 rounded-3xl" />
           <div className="grid lg:grid-cols-3 gap-8">
@@ -75,7 +72,6 @@ const PropertyDetails = () => {
   if (error || !listing) {
     return (
       <div className="min-h-screen bg-white">
-        <Header />
         <div className="max-w-7xl mx-auto px-4 py-16 text-center">
           <div className="max-w-md mx-auto">
             <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -150,7 +146,6 @@ const PropertyDetails = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
       
       {/* Breadcrumb */}
       <div className="bg-slate-50 border-b border-slate-200 py-4">
@@ -361,10 +356,17 @@ const PropertyDetails = () => {
               {/* Agent Contact Card */}
               <Card className="sticky top-24 shadow-xl animate-fade-in">
                 <CardContent className="p-6 md:p-8">
+                  <div className="flex justify-center mb-4">
+    <span className="inline-block bg-blue-100 text-blue-700 text-xs font-semibold rounded-full px-4 py-1 shadow-sm border border-blue-200 uppercase tracking-wider">
+      Presented by Jigar Patel
+    </span>
+  </div>
                   <div className="text-center mb-8">
-                    <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-                      <span className="text-white font-bold text-3xl">JP</span>
-                    </div>
+                    <img
+                         src="/images/agents/IMG_9799.JPG"  // or your agent's photo path
+                          alt="Jigar Patel"
+                          className="w-24 h-24 rounded-full object-cover mx-auto mb-6 shadow-lg border-2 border-blue-600"
+                         />
                     <h3 className="text-2xl font-bold text-slate-900 mb-2">Jigar Patel</h3>
                     <p className="text-slate-600 mb-2">Licensed Real Estate Professional</p>
                     <div className="flex items-center justify-center text-yellow-500 mb-4">
@@ -380,7 +382,7 @@ const PropertyDetails = () => {
                   <div className="space-y-4 mb-8">
                     <div className="flex items-center justify-center">
                       <Phone className="h-5 w-5 mr-3 text-blue-600" />
-                      <span className="font-medium">(416) 555-0123</span>
+                      <span className="font-medium">(647) 801-5448</span>
                     </div>
                     <div className="flex items-center justify-center">
                       <Mail className="h-5 w-5 mr-3 text-blue-600" />
@@ -415,7 +417,7 @@ const PropertyDetails = () => {
                         <div className="text-xs text-slate-600">Homes Sold</div>
                       </div>
                       <div>
-                        <div className="text-2xl font-bold text-slate-900">15+</div>
+                        <div className="text-2xl font-bold text-slate-900">5+</div>
                         <div className="text-xs text-slate-600">Years Exp.</div>
                       </div>
                       <div>
@@ -448,7 +450,7 @@ const PropertyDetails = () => {
               </Card>
 
               {/* Property Download */}
-              <Card className="shadow-lg animate-fade-in">
+             {/* <Card className="shadow-lg animate-fade-in">
                 <CardContent className="p-6">
                   <h3 className="text-xl font-bold text-slate-900 mb-4 flex items-center">
                     <Download className="h-5 w-5 mr-2 text-blue-600" />
@@ -461,7 +463,7 @@ const PropertyDetails = () => {
                     Download PDF
                   </Button>
                 </CardContent>
-              </Card>
+              </Card> */}
             </div>
           </div>
         </div>

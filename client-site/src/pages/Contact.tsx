@@ -1,4 +1,3 @@
-import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,7 +63,6 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
       <section className="py-20 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 text-white relative overflow-hidden">
         {/* ...background and header markup... */}
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative">
