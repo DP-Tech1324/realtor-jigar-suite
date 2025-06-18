@@ -175,7 +175,7 @@ const FeaturedListings = () => {
           )}
         </div>
 
-        <div className="text-center bg-gradient-to-r from-blue-600 to-blue-700 rounded-3xl p-12 text-white">
+        {/*<div className="text-center bg-gradient-to-r from-blue-600 to-blue-700 rounded-3xl p-12 text-white">
           <h3 className="text-3xl md:text-4xl font-bold mb-6">
             Explore All Available Properties
           </h3>
@@ -201,7 +201,7 @@ const FeaturedListings = () => {
               Schedule Consultation
             </Button>
           </div>
-        </div>
+        </div> */}
       </div>
     </section>
   );

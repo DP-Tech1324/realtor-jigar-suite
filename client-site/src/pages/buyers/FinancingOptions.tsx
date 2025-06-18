@@ -1,9 +1,7 @@
-
-import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, Home, CreditCard, TrendingUp, CheckCircle, AlertCircle } from "lucide-react";
+import { DollarSign, CreditCard, TrendingUp, CheckCircle, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const FinancingOptions = () => {
@@ -57,8 +55,6 @@ const FinancingOptions = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
-      
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-green-50 to-emerald-100 py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

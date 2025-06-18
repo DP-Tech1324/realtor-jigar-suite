@@ -1,6 +1,4 @@
-
 import { useState } from "react";
-import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,7 +30,6 @@ const Favorites = () => {
   if (!user) {
     return (
       <div className="min-h-screen bg-white">
-        <Header />
         <section className="py-20">
           <div className="max-w-4xl mx-auto px-4 text-center">
             <div className="bg-red-50 p-4 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
@@ -64,7 +61,6 @@ const Favorites = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
       
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-red-500 to-pink-600 py-16">
