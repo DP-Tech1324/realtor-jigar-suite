@@ -11,6 +11,7 @@ import AdminRoute from "@/components/AdminRoute";
 import AgentBar from "@/components/AgentBar";
 import Navbar from "@/components/Navbar";
 import TaglineBar from "@/components/TaglineBar";
+import ListingsPage from "@/pages/Listings";
 
 
 // Pages
@@ -62,6 +63,7 @@ const App = () => (
             <Route path="/property/:id" element={<PropertyDetails />} />
             <Route path="/search" element={<PropertySearch />} />
             <Route path="/favorites" element={<Favorites />} />
+            <Route path="/listings" element={<ListingsPage />} />
             {/* Information Pages */}
             <Route path="/faq" element={<FAQ />} />
             <Route path="/blog" element={<Blog />} />
