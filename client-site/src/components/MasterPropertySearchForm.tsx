@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Search, MapPin } from "lucide-react";
 
-// --- Options (same as before, trimmed for brevity) ---
+// --- Options ---
 const searchByOptions = [
   { value: "city", label: "City" },
   { value: "address", label: "Address" },
@@ -59,6 +59,9 @@ export default function MasterPropertySearchForm({ onSearch }: { onSearch?: (fie
     keywords: "",
   });
 
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const target = e.target as HTMLInputElement | HTMLSelectElement;
     const { name, value, type } = target;
@@ -75,8 +78,43 @@ export default function MasterPropertySearchForm({ onSearch }: { onSearch?: (fie
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+
+    // Build query params from fields
+    const params = new URLSearchParams();
+
+    if (fields.search && fields.searchBy) {
+      if (fields.searchBy === "city") params.append("city", fields.search);
+      if (fields.searchBy === "address") params.append("address", fields.search);
+      if (fields.searchBy === "postal_code") params.append("postal_code", fields.search);
+      if (fields.searchBy === "mls") params.append("mls", fields.search);
+    }
+    if (fields.listingType) params.append("type", fields.listingType);
+    if (fields.price) params.append("price", fields.price);
+    if (fields.homeType) params.append("homeType", fields.homeType);
+    if (fields.saleType) params.append("saleType", fields.saleType);
+    if (fields.beds) params.append("beds", fields.beds);
+    if (fields.baths) params.append("baths", fields.baths);
+    if (fields.propertyType) params.append("propertyType", fields.propertyType);
+    if (fields.sqft) params.append("sqft", fields.sqft);
+    if (fields.daysOnMarket) params.append("daysOnMarket", fields.daysOnMarket);
+    if (fields.showOnly) params.append("showOnly", fields.showOnly);
+    if (fields.keywords) params.append("keywords", fields.keywords);
+
+    try {
+      const res = await fetch(
+        `https://realtor-jigar-suite-bdod.vercel.app/api/ddf-listings?${params.toString()}`
+      );
+      const data = await res.json();
+      setResults(data || []);
+    } catch (error) {
+      alert("Error fetching listings.");
+      setResults([]);
+    }
+    setLoading(false);
+
     if (onSearch) onSearch(fields);
   };
 
@@ -214,6 +252,39 @@ export default function MasterPropertySearchForm({ onSearch }: { onSearch?: (fie
           <div className="hidden md:block" />
         </div>
       </form>
+
+      {/* Results Section */}
+      <div className="mt-10">
+        {loading && <div>Loading listings...</div>}
+        {!loading && results.length === 0 && <div>No listings found.</div>}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {results.map(listing => (
+            <div key={listing.ListingKey} className="border rounded-lg shadow p-4 bg-white">
+              {listing.Media && listing.Media[0]?.MediaURL && (
+                <img src={listing.Media[0].MediaURL} alt="Property" className="w-full h-48 object-cover rounded mb-2" />
+              )}
+              <div className="font-bold text-lg">{listing.PropertySubType || "Property"}</div>
+              <div className="text-sm text-gray-600">{listing.City}</div>
+              <div className="text-xs text-gray-500 mb-2">{listing.PublicRemarks?.slice(0, 80)}...</div>
+              {listing.ListingURL && (
+                <a
+                  className="text-blue-700 underline text-xs"
+                  href={`https://${listing.ListingURL.replace(/^https?:\/\//, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View on REALTOR.ca
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="mt-4">
+          <a href="https://www.realtor.ca/en" target="_blank" rel="noopener noreferrer">
+            <img width="125" src="https://www.realtor.ca/images/en-ca/powered_by_realtor.svg" alt="Powered by REALTOR.ca" />
+          </a>
+        </div>
+      </div>
     </div>
   );
 }

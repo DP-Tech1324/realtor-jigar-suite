@@ -49,8 +49,9 @@ const App = () => (
           <ScrollToTop />
           {/* -------- GLOBAL LAYOUT -------- */}
           <AgentBar />
-          <Navbar />
           <TaglineBar />
+          <Navbar />
+          
           
           {/* -------- ROUTES -------- */}
           <Routes>
