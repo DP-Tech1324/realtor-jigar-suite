@@ -11,7 +11,6 @@ import Footer from "@/components/Footer";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, TrendingUp, Calculator, Users, Star } from "lucide-react";
-import DDFListings from "@/components/DDFListings";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -139,7 +138,7 @@ const Index = () => {
           <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 animate-fade-in">
             <InquiryForm />
           </div>
-          <DDFListings />
+         
         </div>
       </section>
 
