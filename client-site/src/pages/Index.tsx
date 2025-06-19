@@ -138,7 +138,7 @@ const Index = () => {
           <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 animate-fade-in">
             <InquiryForm />
           </div>
-         
+
         </div>
       </section>
 
