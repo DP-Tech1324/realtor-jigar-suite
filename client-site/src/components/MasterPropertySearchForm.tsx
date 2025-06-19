@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Search, MapPin } from "lucide-react";
+import { Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // --- Options ---
 const searchByOptions = [
@@ -9,7 +10,6 @@ const searchByOptions = [
   { value: "postal_code", label: "Postal Code" },
   { value: "mls", label: "MLS#" },
 ];
-
 const homeTypeOptions = [
   { value: "", label: "Home Type" },
   { value: "detached", label: "Detached" },
@@ -17,7 +17,6 @@ const homeTypeOptions = [
   { value: "townhouse", label: "Townhouse" },
   { value: "condo", label: "Condo" },
 ];
-
 const priceOptions = [
   { value: "", label: "Price Range" },
   { value: "0-500000", label: "Up to $500K" },
@@ -26,14 +25,12 @@ const priceOptions = [
   { value: "1000000-2000000", label: "$1M-$2M" },
   { value: "2000000+", label: "$2M+" },
 ];
-
 const propertyTypeOptions = [
   { value: "", label: "Property Type" },
   { value: "freehold", label: "Freehold" },
   { value: "condo", label: "Condo" },
   { value: "other", label: "Other" },
 ];
-
 const showOnlyOptions = [
   { value: "", label: "Show Only" },
   { value: "openhouse", label: "Open House" },
@@ -41,8 +38,8 @@ const showOnlyOptions = [
   { value: "price_reduced", label: "Price Reduced" },
 ];
 
-// --- Main Component ---
-export default function MasterPropertySearchForm({ onSearch }: { onSearch?: (fields: any) => void }) {
+export default function MasterPropertySearchForm() {
+  const navigate = useNavigate();
   const [fields, setFields] = useState({
     searchBy: "city",
     search: "",
@@ -58,9 +55,6 @@ export default function MasterPropertySearchForm({ onSearch }: { onSearch?: (fie
     showOnly: "",
     keywords: "",
   });
-
-  const [results, setResults] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const target = e.target as HTMLInputElement | HTMLSelectElement;
@@ -78,13 +72,9 @@ export default function MasterPropertySearchForm({ onSearch }: { onSearch?: (fie
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    // Build query params from fields
     const params = new URLSearchParams();
-
     if (fields.search && fields.searchBy) {
       if (fields.searchBy === "city") params.append("city", fields.search);
       if (fields.searchBy === "address") params.append("address", fields.search);
@@ -103,22 +93,11 @@ export default function MasterPropertySearchForm({ onSearch }: { onSearch?: (fie
     if (fields.showOnly) params.append("showOnly", fields.showOnly);
     if (fields.keywords) params.append("keywords", fields.keywords);
 
-    try {
-      const res = await fetch(
-        `https://realtor-jigar-suite-bdod.vercel.app/api/ddf-listings?${params.toString()}`
-      );
-      const data = await res.json();
-      setResults(data || []);
-    } catch (error) {
-      alert("Error fetching listings.");
-      setResults([]);
-    }
-    setLoading(false);
-
-    if (onSearch) onSearch(fields);
+    // Redirect to /listings with params
+    navigate(`/listings?${params.toString()}`);
   };
 
-  // Glassmorphic field style
+  // --- Glassmorphic field style ---
   const fieldClass =
     "h-14 w-full px-4 py-2 rounded-2xl border border-white/20 bg-white/60 backdrop-blur-sm text-base text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-blue-400 focus:bg-white/80 transition-all";
   const selectClass = fieldClass + " font-medium";
@@ -252,39 +231,6 @@ export default function MasterPropertySearchForm({ onSearch }: { onSearch?: (fie
           <div className="hidden md:block" />
         </div>
       </form>
-
-      {/* Results Section */}
-      <div className="mt-10">
-        {loading && <div>Loading listings...</div>}
-        {!loading && results.length === 0 && <div>No listings found.</div>}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {results.map(listing => (
-            <div key={listing.ListingKey} className="border rounded-lg shadow p-4 bg-white">
-              {listing.Media && listing.Media[0]?.MediaURL && (
-                <img src={listing.Media[0].MediaURL} alt="Property" className="w-full h-48 object-cover rounded mb-2" />
-              )}
-              <div className="font-bold text-lg">{listing.PropertySubType || "Property"}</div>
-              <div className="text-sm text-gray-600">{listing.City}</div>
-              <div className="text-xs text-gray-500 mb-2">{listing.PublicRemarks?.slice(0, 80)}...</div>
-              {listing.ListingURL && (
-                <a
-                  className="text-blue-700 underline text-xs"
-                  href={`https://${listing.ListingURL.replace(/^https?:\/\//, "")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View on REALTOR.ca
-                </a>
-              )}
-            </div>
-          ))}
-        </div>
-        <div className="mt-4">
-          <a href="https://www.realtor.ca/en" target="_blank" rel="noopener noreferrer">
-            <img width="125" src="https://www.realtor.ca/images/en-ca/powered_by_realtor.svg" alt="Powered by REALTOR.ca" />
-          </a>
-        </div>
-      </div>
     </div>
   );
 }
