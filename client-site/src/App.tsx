@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ScrollToTop from "./components/ScrollToTop";
 import { AuthProvider } from "@/components/auth/AuthContext";
-import AdminRoute from "@/components/AdminRoute";
+
 
 // 💡 Add these:
 import AgentBar from "@/components/AgentBar";
@@ -31,11 +31,10 @@ import HomeValuation from "./pages/sellers/HomeValuation";
 import MarketingStrategy from "./pages/sellers/MarketingStrategy";
 import StagingTips from "./pages/sellers/StagingTips";
 import PropertyDetails from "./pages/PropertyDetails";
-import PropertySearch from "./pages/PropertySearch";
 import FAQ from "./pages/FAQ";
 import Blog from "./pages/Blog";
 import Favorites from "./pages/Favorites";
-import AdminDashboard from "./pages/AdminDashboard";
+
 import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient();
@@ -61,18 +60,13 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             {/* Property Pages */}
             <Route path="/property/:id" element={<PropertyDetails />} />
-            <Route path="/search" element={<PropertySearch />} />
+            
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/listings" element={<ListingsPage />} />
             {/* Information Pages */}
             <Route path="/faq" element={<FAQ />} />
             <Route path="/blog" element={<Blog />} />
-            {/* Admin */}
-            <Route path="/admin" element={
-              <AdminRoute>
-                <AdminDashboard />
-              </AdminRoute>
-            } />
+           
             {/* Calculators */}
             <Route path="/calculators" element={<Calculators />} />
             <Route path="/calculators/mortgage" element={<MortgageCalculator />} />
