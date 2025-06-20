@@ -12,7 +12,7 @@ const AGENT = {
 
 export default function AgentBar() {
   return (
-    <div className="w-full flex justify-center">
+    <div className="w-full  flex justify-center">
       <div
         className="
           bg-white

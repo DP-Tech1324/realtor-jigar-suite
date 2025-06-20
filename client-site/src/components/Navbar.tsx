@@ -32,7 +32,7 @@ const NAV = [
   { label: "Map Search", href: "/map-search", children: [] },
   { label: "Contact Me", href: "/contact", children: [] },
   {
-    label: "Useful Tools", href: "/tools", children: [
+    label: "Resources", href: "/resources", children: [
       { label: "Calculators", href: "/calculators" },
       { label: "Blog & Articles", href: "/blog" },
       { label: "FAQ", href: "/faq" },
@@ -48,17 +48,19 @@ export default function ClassicNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileDropdown, setMobileDropdown] = useState<number | null>(null);
 
-  // Adjust this to match your tagline height exactly (in px)
-  const TAGLINE_HEIGHT = 44;
+  // This is the combined height of your TaglineBar + AgentBar (adjust if needed)
+  const HEADER_HEIGHT = 160; // px
 
-  // Active link highlight logic
-  const isActive = (href) =>
+  const isActive = (href: string) =>
     href === "/#listings"
       ? location.hash === "#listings"
       : location.pathname === href;
 
   return (
-    <nav className={`w-full bg-white shadow-md border-b border-slate-200 font-sans z-40 relative mt-[${TAGLINE_HEIGHT}px]`}>
+    <nav
+      className="w-full bg-white shadow-md border-b border-slate-200 font-sans z-40 sticky top-0"
+      style={{ zIndex: 40 }}
+    >
       <div className="max-w-[1240px] mx-auto flex items-center h-[58px] px-2">
 
         {/* Hamburger (mobile only) */}
@@ -74,7 +76,7 @@ export default function ClassicNavbar() {
           )}
         </button>
 
-        {/* Desktop NAV (horizontal, visible on lg+) */}
+        {/* Desktop NAV */}
         <div className="flex-1 justify-center hidden lg:flex">
           <ul className="flex items-center gap-1">
             {NAV.map((item, idx) => (
@@ -106,7 +108,7 @@ export default function ClassicNavbar() {
                     <span className="ml-1 text-xs">&#x25BC;</span>
                   )}
                 </button>
-                {/* Dropdown (desktop only) */}
+                {/* Dropdown */}
                 {!!item.children.length && openDropdown === idx && (
                   <div className="absolute left-0 top-full mt-0 bg-white border border-slate-200 rounded shadow-xl min-w-[240px] z-50">
                     <ul>
@@ -141,72 +143,65 @@ export default function ClassicNavbar() {
 
       {/* Mobile Slide-Out Menu */}
       {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-[90]">
-          {/* Overlay */}
-          <div
-            className="absolute inset-0 bg-black bg-opacity-40"
-            onClick={() => setMobileOpen(false)}
-          />
-          {/* Sidebar - starts just below the tagline */}
-          <div
-            className={`fixed top-[${TAGLINE_HEIGHT}px] left-0 h-[calc(100vh-${TAGLINE_HEIGHT}px)] w-72 bg-white shadow-xl z-[100] transition-transform`}
-            style={{
-              boxShadow: "0 4px 32px 0 rgba(0,0,0,.12)"
-            }}
-          >
-            <div className="flex flex-col gap-4 p-5">
-              {NAV.map((item, idx) => (
-                <div key={item.label}>
-                  <button
-                    className={`w-full flex items-center justify-between px-2 py-3 text-base font-semibold ${
-                      isActive(item.href) ? "text-blue-700" : "text-slate-900"
-                    }`}
-                    onClick={() => {
-                      if (item.children.length) {
-                        setMobileDropdown(mobileDropdown === idx ? null : idx);
-                      } else {
-                        setMobileOpen(false);
-                        navigate(item.href);
-                      }
-                    }}
-                  >
-                    {item.label}
-                    {!!item.children.length && (
-                      <span className="ml-2">
-                        {mobileDropdown === idx ? "▲" : "▼"}
-                      </span>
-                    )}
-                  </button>
-                  {!!item.children.length && mobileDropdown === idx && (
-                    <ul className="pl-4">
-                      {item.children.map((sub) => (
-                        <li key={sub.label}>
-                          <button
-                            className="w-full text-left py-2 px-2 text-[15px] text-slate-700 hover:bg-blue-50"
-                            onClick={() => {
-                              setMobileOpen(false);
-                              navigate(sub.href);
-                            }}
-                          >
-                            {sub.label}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
+        <div
+          className="lg:hidden absolute left-0 w-full z-[99] bg-white shadow-xl border-t"
+          style={{
+            // put right below the header
+            top: `58px`,
+          }}
+        >
+          <div className="flex flex-col gap-2 p-4">
+            {NAV.map((item, idx) => (
+              <div key={item.label}>
+                <button
+                  className={`w-full flex items-center justify-between px-2 py-3 text-base font-semibold ${
+                    isActive(item.href) ? "text-blue-700" : "text-slate-900"
+                  }`}
+                  onClick={() => {
+                    if (item.children.length) {
+                      setMobileDropdown(mobileDropdown === idx ? null : idx);
+                    } else {
+                      setMobileOpen(false);
+                      navigate(item.href);
+                    }
+                  }}
+                >
+                  {item.label}
+                  {!!item.children.length && (
+                    <span className="ml-2">
+                      {mobileDropdown === idx ? "▲" : "▼"}
+                    </span>
                   )}
-                </div>
-              ))}
-              {/* Auth button mobile */}
-              <button
-                className="mt-6 w-full px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded"
-                onClick={() => {
-                  setMobileOpen(false);
-                  navigate("/auth");
-                }}
-              >
-                Sign In
-              </button>
-            </div>
+                </button>
+                {!!item.children.length && mobileDropdown === idx && (
+                  <ul className="pl-4">
+                    {item.children.map((sub) => (
+                      <li key={sub.label}>
+                        <button
+                          className="w-full text-left py-2 px-2 text-[15px] text-slate-700 hover:bg-blue-50"
+                          onClick={() => {
+                            setMobileOpen(false);
+                            navigate(sub.href);
+                          }}
+                        >
+                          {sub.label}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+            {/* Auth button mobile */}
+            <button
+              className="mt-6 w-full px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded"
+              onClick={() => {
+                setMobileOpen(false);
+                navigate("/auth");
+              }}
+            >
+              Sign In
+            </button>
           </div>
         </div>
       )}
