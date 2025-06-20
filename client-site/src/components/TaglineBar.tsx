@@ -8,7 +8,7 @@ const TAGLINES = [
 export default function TaglineBar() {
   const tagline = TAGLINES[Math.floor(Math.random() * TAGLINES.length)];
   return (
-    <div className="w-full sticky top-0 left-0 z-[60] bg-slate-900 py-[10px] px-2 shadow" style={{fontFamily: "'Open Sans', Arial, sans-serif"}}>
+    <div className="w-full fixed top-0 left-0 z-[99] bg-slate-900 py-[10px] px-2 shadow" style={{fontFamily: "'Open Sans', Arial, sans-serif"}}>
       <div className="text-center text-white text-base font-bold uppercase tracking-widest" style={{letterSpacing: "1px"}}>
         <span className="shimmer-text">{tagline}</span>
       </div>

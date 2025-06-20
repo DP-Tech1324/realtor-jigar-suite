@@ -12,6 +12,7 @@ import AgentBar from "@/components/AgentBar";
 import Navbar from "@/components/Navbar";
 import TaglineBar from "@/components/TaglineBar";
 import ListingsPage from "@/pages/Listings";
+import MapSearch from "@/pages/MapSearch";
 
 
 // Pages
@@ -48,8 +49,9 @@ const App = () => (
         <BrowserRouter>
           <ScrollToTop />
           {/* -------- GLOBAL LAYOUT -------- */}
-          <AgentBar />
           <TaglineBar />
+          <AgentBar />
+          
           <Navbar />
           
           
@@ -66,7 +68,9 @@ const App = () => (
             {/* Information Pages */}
             <Route path="/faq" element={<FAQ />} />
             <Route path="/blog" element={<Blog />} />
-           
+            <Route path="/map-search" element={<MapSearch />} />
+            {/* Search Page */}
+            <Route path="/search" element={<ListingsPage />} />
             {/* Calculators */}
             <Route path="/calculators" element={<Calculators />} />
             <Route path="/calculators/mortgage" element={<MortgageCalculator />} />
