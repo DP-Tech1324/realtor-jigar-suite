@@ -1,8 +1,8 @@
 // ddf_sync_ontario_enum_safe.js
-
+import dotenv from 'dotenv';
 import fetch from 'node-fetch';
 import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
+
 dotenv.config();
 
 // ---------------------------
@@ -26,6 +26,8 @@ const DDF_CLIENT_ID = process.env.DDF_CLIENT_ID;
 const DDF_CLIENT_SECRET = process.env.DDF_CLIENT_SECRET;
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+console.log("SUPABASE_URL:", process.env.SUPABASE_URL);
+console.log("SERVICE_ROLE_KEY:", process.env.SERVICE_ROLE_KEY);
 
 // --- ENUM MAPPING HELPERS ---
 // These make sure DDF values match your DB enums. Update if your DB changes!
@@ -226,7 +228,8 @@ async function syncAllProvinceListings() {
     let inserted = 0;
     for (let i = 0; i < mapped.length; i += BATCH_SIZE) {
       const batch = mapped.slice(i, i + BATCH_SIZE);
-      const { error } = await supabase.from('listings').upsert(batch, { onConflict: ['listing_key'] });
+      const { error } = await supabase.from('ddf_listings').upsert(batch, { onConflict: ['listing_key'] });
+
       if (error) {
         console.error(`❌ Error inserting batch ${i / BATCH_SIZE + 1}:`, error.message, error.details || '');
         console.dir(batch[0], { depth: 2 });
@@ -236,6 +239,13 @@ async function syncAllProvinceListings() {
         console.log(`✅ Synced ${inserted}/${mapped.length} ${PROVINCE} listings`);
       }
     }
+    // 1. Call the SQL function to sync to your main table
+const { error: syncError } = await supabase.rpc('sync_ddf_to_listings');
+if (syncError) {
+  console.error('❌ Error syncing to main listings table:', syncError.message);
+} else {
+  console.log("✅ Main listings table synced via function!");
+}
   } catch (err) {
     console.error('❌ Error:', err.message);
   }

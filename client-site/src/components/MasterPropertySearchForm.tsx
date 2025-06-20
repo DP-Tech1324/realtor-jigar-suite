@@ -3,10 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-interface MasterPropertySearchFormProps {
-  onSearch?: (filters: Record<string, string>) => void;
-}
-
 // --- Options ---
 const searchByOptions = [
   { value: "city", label: "City" },
@@ -57,83 +53,107 @@ const showOnlyOptions = [
   { value: "price_reduced", label: "Price Reduced" },
 ];
 
-export default function MasterPropertySearchForm({ onSearch }: MasterPropertySearchFormProps) {
-  const navigate = useNavigate();
-  const [fields, setFields] = useState({
-    searchBy: "city",
-    search: "",
-    listingType: "residential",
-    price: "",
-    homeType: "",
-    commercialType: "",
-    saleType: "sale",
-    beds: "",
-    baths: "",
-    propertyType: "",
-    commercialPropertyType: "",
-    sqft: "",
-    daysOnMarket: "",
-    showOnly: "",
-    keywords: "",
-  });
+const defaultFields = {
+  searchBy: "city",
+  search: "",
+  listingType: "residential",
+  price: "",
+  homeType: "",
+  commercialType: "",
+  saleType: "sale",
+  beds: "",
+  baths: "",
+  propertyType: "",
+  commercialPropertyType: "",
+  sqft: "",
+  daysOnMarket: "",
+  showOnly: "",
+  keywords: "",
+};
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const target = e.target as HTMLInputElement | HTMLSelectElement;
-    const { name, value, type } = target;
-    setFields(f => ({
-      ...f,
-      [name]: type === "checkbox" ? (target as HTMLInputElement).checked : value
+export default function MasterPropertySearchForm() {
+  const navigate = useNavigate();
+  const [fields, setFields] = useState(defaultFields);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFields((prev) => ({
+      ...prev,
+      [name]: value,
     }));
   };
 
   const handleToggle = () => {
-    setFields(f => ({
-      ...f,
-      saleType: f.saleType === "sale" ? "rent" : "sale"
+    setFields((prev) => ({
+      ...prev,
+      saleType: prev.saleType === "sale" ? "rent" : "sale",
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // "Residential" vs "Commercial" dropdown
+  const handleListingType = (e) => {
+    setFields((prev) => ({
+      ...prev,
+      listingType: e.target.value,
+      // Reset type-specific fields
+      homeType: "",
+      commercialType: "",
+      beds: "",
+      baths: "",
+      propertyType: "",
+      commercialPropertyType: "",
+    }));
+  };
+
+  const handleSubmit = (e) => {
     e.preventDefault();
     const params: Record<string, string> = {};
 
+    // Main search switch
     if (fields.search && fields.searchBy) {
       if (fields.searchBy === "city") params.city = fields.search;
       if (fields.searchBy === "address") params.address = fields.search;
       if (fields.searchBy === "postal_code") params.postal_code = fields.search;
       if (fields.searchBy === "mls") params.mls = fields.search;
     }
-    if (fields.listingType) params.type = fields.listingType;
-    if (fields.price) params.price = fields.price;
-    if (fields.listingType === "residential" && fields.homeType) params.homeType = fields.homeType;
-    if (fields.listingType === "commercial" && fields.commercialType) params.commercialType = fields.commercialType;
-    if (fields.saleType) params.saleType = fields.saleType;
+
+    // Listing type
     if (fields.listingType === "residential") {
-      if (fields.beds) params.beds = fields.beds;
-      if (fields.baths) params.baths = fields.baths;
-      if (fields.propertyType) params.propertyType = fields.propertyType;
+      if (fields.homeType) params.propertyType = fields.homeType;
+      if (fields.beds) params.bedrooms = fields.beds;
+      if (fields.baths) params.bathrooms = fields.baths;
     } else if (fields.listingType === "commercial") {
-      if (fields.commercialPropertyType) params.commercialPropertyType = fields.commercialPropertyType;
+      if (fields.commercialType) params.propertyType = fields.commercialType;
+      // Add more commercial mapping if needed
     }
+
+    // Price
+    if (fields.price) {
+      if (fields.price.includes("-")) {
+        const [min, max] = fields.price.split("-");
+        params.minPrice = min;
+        params.maxPrice = max;
+      } else if (fields.price.endsWith("+")) {
+        params.minPrice = fields.price.replace("+", "");
+      }
+    }
+
+    if (fields.saleType) params.saleType = fields.saleType;
     if (fields.sqft) params.sqft = fields.sqft;
     if (fields.daysOnMarket) params.daysOnMarket = fields.daysOnMarket;
     if (fields.showOnly) params.showOnly = fields.showOnly;
     if (fields.keywords) params.keywords = fields.keywords;
 
-    if (onSearch) {
-      onSearch(params);
-    } else {
-      const qs = new URLSearchParams(Object.entries(params)).toString();
-      navigate(`/listings?${qs}`);
-    }
+    // Query string and nav
+    const qs = new URLSearchParams(params).toString();
+    navigate(qs ? `/listings?${qs}` : "/listings");
   };
 
-  // --- Glassmorphic field style ---
+  // --- UI Section ---
+  const isResidential = fields.listingType === "residential";
   const fieldClass =
     "h-14 w-full px-4 py-2 rounded-2xl border border-white/20 bg-white/60 backdrop-blur-sm text-base text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-blue-400 focus:bg-white/80 transition-all";
   const selectClass = fieldClass + " font-medium";
-
-  const isResidential = fields.listingType === "residential";
 
   return (
     <div className="bg-white/40 backdrop-blur-xl border border-white/20 shadow-2xl rounded-3xl px-6 md:px-10 py-10 md:py-12 max-w-4xl mx-auto">
@@ -141,13 +161,12 @@ export default function MasterPropertySearchForm({ onSearch }: MasterPropertySea
         <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-8 text-center tracking-tight drop-shadow-lg">
           Find Your <span className="text-blue-700">Dream Home</span>
         </h2>
-        {/* Main search row */}
-        <div className="flex flex-col md:flex-row gap-3 mb-7">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <select
             name="searchBy"
             value={fields.searchBy}
             onChange={handleChange}
-            className={selectClass + " md:max-w-[170px]"}
+            className={selectClass}
             aria-label="Search By"
           >
             {searchByOptions.map(opt => (
@@ -159,21 +178,12 @@ export default function MasterPropertySearchForm({ onSearch }: MasterPropertySea
             value={fields.search}
             onChange={handleChange}
             placeholder="Type City, Address, Postal Code, MLS#"
-            className={fieldClass + " flex-1"}
+            className={fieldClass}
             autoComplete="off"
           />
-          <Button
-            type="submit"
-            className="h-14 px-8 bg-gradient-to-tr from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-bold rounded-2xl flex items-center justify-center text-lg shadow-xl hover:scale-[1.03] transition-all duration-200"
-          >
-            <Search className="mr-2 h-6 w-6" />
-            Search
-          </Button>
         </div>
-
-        {/* Filters grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <select name="listingType" value={fields.listingType} onChange={handleChange} className={selectClass}>
+          <select name="listingType" value={fields.listingType} onChange={handleListingType} className={selectClass}>
             <option value="residential">Residential</option>
             <option value="commercial">Commercial</option>
           </select>
@@ -182,7 +192,6 @@ export default function MasterPropertySearchForm({ onSearch }: MasterPropertySea
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>
-          {/* Dynamic options */}
           {isResidential ? (
             <select name="homeType" value={fields.homeType} onChange={handleChange} className={selectClass}>
               {homeTypeOptions.map(opt => (
@@ -197,9 +206,7 @@ export default function MasterPropertySearchForm({ onSearch }: MasterPropertySea
             </select>
           )}
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          {/* Sale/Rent Toggle */}
           <div className="flex items-center gap-4 col-span-1 min-h-[56px]">
             <span className={`font-semibold ${fields.saleType === "sale" ? "text-blue-700" : "text-gray-700"}`}>For Sale</span>
             <button
@@ -215,8 +222,6 @@ export default function MasterPropertySearchForm({ onSearch }: MasterPropertySea
             </button>
             <span className={`font-semibold ${fields.saleType === "rent" ? "text-blue-700" : "text-gray-700"}`}>For Rent</span>
           </div>
-
-          {/* Only for Residential */}
           {isResidential && (
             <>
               <select name="beds" value={fields.beds} onChange={handleChange} className={selectClass}>
@@ -236,9 +241,7 @@ export default function MasterPropertySearchForm({ onSearch }: MasterPropertySea
             </>
           )}
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          {/* Show property type depending on category */}
           {isResidential ? (
             <select name="propertyType" value={fields.propertyType} onChange={handleChange} className={selectClass}>
               {propertyTypeOptions.map(opt => (
@@ -269,8 +272,7 @@ export default function MasterPropertySearchForm({ onSearch }: MasterPropertySea
             className={fieldClass}
           />
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <select name="showOnly" value={fields.showOnly} onChange={handleChange} className={selectClass}>
             {showOnlyOptions.map(opt => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -285,6 +287,15 @@ export default function MasterPropertySearchForm({ onSearch }: MasterPropertySea
             className={fieldClass}
           />
           <div className="hidden md:block" />
+        </div>
+        <div className="flex justify-center">
+          <Button
+            type="submit"
+            className="h-14 px-8 bg-gradient-to-tr from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-bold rounded-2xl flex items-center justify-center text-lg shadow-xl hover:scale-[1.03] transition-all duration-200"
+          >
+            <Search className="mr-2 h-6 w-6" />
+            Search
+          </Button>
         </div>
       </form>
     </div>

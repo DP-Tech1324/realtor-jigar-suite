@@ -1,31 +1,59 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import MasterPropertySearchForm from "@/components/MasterPropertySearchForm";
+import PropertySearch from "@/components/PropertySearch"; // <- this is your filter bar!
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
-// Helper to parse filters from location.search
+// Helper: parse URL params into filter fields matching your DB
 function parseFilters(search: string) {
   const params = new URLSearchParams(search);
   return {
-    city: params.get("city") || undefined,
-    address: params.get("address") || undefined,
-    postal_code: params.get("postal_code") || undefined,
-    mls: params.get("mls") || undefined,
-    type: params.get("type") || undefined,
-    price: params.get("price") || undefined,
-    homeType: params.get("homeType") || undefined,
-    commercialType: params.get("commercialType") || undefined,
-    saleType: params.get("saleType") || undefined,
-    beds: params.get("beds") || undefined,
-    baths: params.get("baths") || undefined,
-    propertyType: params.get("propertyType") || undefined,
-    commercialPropertyType: params.get("commercialPropertyType") || undefined,
-    sqft: params.get("sqft") || undefined,
-    daysOnMarket: params.get("daysOnMarket") || undefined,
-    showOnly: params.get("showOnly") || undefined,
-    keywords: params.get("keywords") || undefined,
+    city: params.get("city") || "",
+    propertyType: params.get("propertyType") || "",
+    minPrice: params.get("minPrice") || "",
+    maxPrice: params.get("maxPrice") || "",
+    bedrooms: params.get("bedrooms") || "",
+    bathrooms: params.get("bathrooms") || "",
+    saleType: params.get("saleType") || "", // will be "sale" or "rent"
+    keywords: params.get("keywords") || "",
+    mls: params.get("mls") || "",
+    address: params.get("address") || "",
+    postal_code: params.get("postal_code") || "",
   };
+}
+
+// Map search field names to DB columns
+function applyDbFilters(query, filters) {
+  if (filters.city) query = query.ilike("city", `%${filters.city}%`);
+  if (filters.propertyType) query = query.eq("property_type", filters.propertyType);
+
+  // Price filter: min/max (always works, if filled)
+  if (filters.minPrice) query = query.gte("price", filters.minPrice);
+  if (filters.maxPrice) query = query.lte("price", filters.maxPrice);
+
+  // Bedrooms/Bathrooms
+  if (filters.bedrooms) query = query.gte("bedrooms", filters.bedrooms);
+  if (filters.bathrooms) query = query.gte("bathrooms", filters.bathrooms);
+
+  // Sale type
+  if (filters.saleType) query = query.eq("transaction_type", filters.saleType);
+
+  // MLS
+  if (filters.mls) query = query.ilike("mls_number", `%${filters.mls}%`);
+
+  // Address/postal
+  if (filters.address) query = query.ilike("address", `%${filters.address}%`);
+  if (filters.postal_code) query = query.ilike("postal_code", `%${filters.postal_code}%`);
+
+  // Keywords (searches title, description, meta_keywords)
+  if (filters.keywords) {
+    query = query.or([
+      `title.ilike.%${filters.keywords}%`,
+      `description.ilike.%${filters.keywords}%`,
+      `meta_keywords.ilike.%${filters.keywords}%`
+    ].join(","));
+  }
+  return query;
 }
 
 export default function ListingsPage() {
@@ -33,38 +61,24 @@ export default function ListingsPage() {
   const navigate = useNavigate();
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchProperties() {
       setLoading(true);
+      setError(null);
       const filters = parseFilters(location.search);
+
       let query = supabase.from("listings").select("*");
+      query = applyDbFilters(query, filters);
 
-      // Apply filters
-      if (filters.city) query = query.ilike("city", `%${filters.city}%`);
-      if (filters.address) query = query.ilike("address", `%${filters.address}%`);
-      if (filters.mls) query = query.eq("mls_number", filters.mls);
-      if (filters.type) query = query.eq("property_type", filters.type);
-      if (filters.price && filters.price.includes("-")) {
-        const [min, max] = filters.price.split("-");
-        query = query.gte("price", min).lte("price", max);
-      } else if (filters.price && filters.price.endsWith("+")) {
-        const min = filters.price.replace("+", "");
-        query = query.gte("price", min);
-      }
-      if (filters.homeType) query = query.ilike("homeType", `%${filters.homeType}%`);
-      if (filters.commercialType) query = query.ilike("commercialType", `%${filters.commercialType}%`);
-      if (filters.saleType) query = query.eq("sale_type", filters.saleType);
-      if (filters.beds) query = query.gte("bedrooms", filters.beds);
-      if (filters.baths) query = query.gte("bathrooms", filters.baths);
-      if (filters.propertyType) query = query.eq("property_type", filters.propertyType);
-      if (filters.commercialPropertyType) query = query.eq("commercial_property_type", filters.commercialPropertyType);
-      if (filters.sqft) query = query.gte("square_footage", filters.sqft);
-      // Add more as needed...
-
-      // Fetch data
       const { data, error } = await query;
-      setResults(data || []);
+      if (error) {
+        setError(error.message);
+        setResults([]);
+      } else {
+        setResults(data || []);
+      }
       setLoading(false);
     }
     fetchProperties();
@@ -72,26 +86,37 @@ export default function ListingsPage() {
 
   return (
     <div className="container mx-auto py-10">
-      <MasterPropertySearchForm
+      {/* Filter bar at the top */}
+      <PropertySearch
+        initialValues={parseFilters(location.search)}
         onSearch={filters => {
           const qs = new URLSearchParams(
             Object.entries(filters)
-              .filter(([k, v]) => v !== "" && v !== undefined)
+              .filter(([_, v]) => v !== "" && v !== undefined)
               .map(([k, v]) => [k, String(v)])
           ).toString();
-          navigate(`/listings?${qs}`);
+          navigate(qs ? `/listings?${qs}` : "/listings");
         }}
       />
 
       {loading && <div>Loading properties...</div>}
+      {error && <div className="text-red-500 text-center my-4">{error}</div>}
+
       {!loading && results.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           {results.map(listing => (
             <div key={listing.id} className="border rounded-lg shadow p-4 bg-white flex flex-col">
-              <img src={listing.cover_image || "https://via.placeholder.com/300x200"} alt="Property" className="w-full h-48 object-cover rounded mb-2" />
+              <img
+                src={listing.cover_image || "https://via.placeholder.com/300x200"}
+                alt="Property"
+                className="w-full h-48 object-cover rounded mb-2"
+              />
               <div className="font-bold text-lg">{listing.title || listing.address}</div>
-              <div className="text-sm text-gray-600">{listing.city}</div>
+              <div className="text-sm text-gray-600">{listing.city}{listing.province ? `, ${listing.province}` : ""}</div>
               <div className="text-xs text-gray-500 mb-2">{listing.description?.slice(0, 80)}...</div>
+              <div className="font-semibold text-blue-700 mb-2">
+                {listing.price ? `$${Number(listing.price).toLocaleString()}` : "Price on Request"}
+              </div>
               <Button
                 className="mt-auto"
                 onClick={() => navigate(`/property/${listing.id}`)}
@@ -102,7 +127,7 @@ export default function ListingsPage() {
           ))}
         </div>
       )}
-      {!loading && results.length === 0 && (
+      {!loading && results.length === 0 && !error && (
         <div className="text-center text-gray-500 mt-10">No listings found.</div>
       )}
     </div>
