@@ -159,25 +159,25 @@ function BioSection() {
 
           <div className="space-y-8 animate-fade-in">
             {/* Professional Photo Placeholder */}
-            <div className="relative">
+           {/* <div className="relative">
               <div className="aspect-[4/5] bg-gradient-to-br from-blue-100 via-slate-100 to-blue-200 rounded-3xl flex items-center justify-center shadow-2xl overflow-hidden">
                 <div className="text-center p-10">
                  <img
-  src="/images/agents/IMG_9799.JPG"
-  alt="Jigar Patel"
-  className="absoulate-full object-cover shadow-2xl mx-auto mb-6 shadow-lg border-4 border-white"
-/>
+                 src="/images/agents/IMG_9799.JPG"
+                 alt="Jigar Patel"
+                  className="absolute-full object-cover shadow-2xl mx-auto mb-6 shadow-lg border-4 border-white"
+                />
                   <h4 className="text-2xl font-bold text-slate-800 mb-2">Jigar Patel</h4>
                   <p className="text-slate-600 mb-4">Real Estate Professional</p>
                   
                 </div>
-              </div>
+              </div> */}
 
               {/* Floating achievement badge */}
-              <div className="absolute -top-4 -right-4 bg-yellow-500 text-black px-4 py-2 rounded-full font-bold shadow-lg">
+              {/*<div className="absolute -top-4 -right-4 bg-yellow-500 text-black px-4 py-2 rounded-full font-bold shadow-lg">
                 <span className="text-sm">Top 1% Agent</span>
               </div>
-            </div>
+            </div> */}
 
             {/* Achievement Stats */}
             <div className="grid grid-cols-2 gap-4">

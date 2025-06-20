@@ -166,7 +166,7 @@ const FeaturedListings = () => {
                 We're currently updating our featured listings. Check back soon for new properties or browse our full inventory.
               </p>
               <Button 
-                onClick={() => navigate('/search')}
+                onClick={() => navigate('/listings')}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Browse All Properties
