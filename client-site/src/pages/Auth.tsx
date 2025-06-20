@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, LogIn, UserPlus, AlertCircle } from "lucide-react";
-import Header from "@/components/Header";
+
 import Footer from "@/components/Footer";
 
 const Auth = () => {
@@ -73,7 +73,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <Header />
+      
       
       <div className="flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">

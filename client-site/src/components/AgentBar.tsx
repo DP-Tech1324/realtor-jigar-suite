@@ -21,7 +21,7 @@ export default function AgentBar() {
           border
           flex flex-col md:flex-row items-center
           px-8 py-4
-          mt-4 mb-2
+          mt-12 mb-2
           max-w-xl
         "
         style={{ zIndex: 30 }}
