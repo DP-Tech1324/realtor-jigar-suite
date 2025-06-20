@@ -52,9 +52,9 @@ export default function MapSearch() {
 
 
   return (
-    <div className="flex h-[calc(100vh-110px)] bg-white relative">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-110px)] bg-white relative">
       {/* Left: Map */}
-      <div className="flex-1 min-w-[350px] flex flex-col">
+      <div className="w-full md:flex-1 min-h-[320px] md:min-h-0 flex flex-col">
         <h2 className="text-xl font-bold mb-2 px-4 pt-4">Map Search</h2>
         {/* FILTER BAR */}
         <div className="flex flex-wrap gap-2 mb-2 px-4">
@@ -77,7 +77,7 @@ export default function MapSearch() {
             {/* Add more types as needed */}
           </select>
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-h-[320px] md:min-h-0">
           {isLoaded && (
             <GoogleMap
               mapContainerStyle={containerStyle}
@@ -103,7 +103,8 @@ export default function MapSearch() {
       </div>
 
       {/* Right: Property List */}
-      <div className="w-[420px] min-w-[320px] max-w-[480px] border-l bg-white flex flex-col h-full">
+     <div className="w-full md:w-[420px] md:min-w-[320px] md:max-w-[480px] border-l-0 md:border-l bg-white flex flex-col h-[360px] md:h-full">
+
         <h2 className="text-xl font-bold mb-2 p-4 border-b">Properties</h2>
         <div className="flex-1 overflow-y-auto p-4">
           {filtered.map((prop) => (
