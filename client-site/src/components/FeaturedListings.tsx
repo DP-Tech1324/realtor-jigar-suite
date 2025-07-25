@@ -14,13 +14,13 @@ const FeaturedListings = () => {
 
   const nextSlide = () => {
     if (listings) {
-      setCurrentSlide((prev) => (prev + 1) % Math.ceil(listings.length / 3));
+      setCurrentSlide((prev) => (prev + 1) % Math.ceil(listings.length / 4));
     }
   };
 
   const prevSlide = () => {
     if (listings) {
-      setCurrentSlide((prev) => (prev - 1 + Math.ceil(listings.length / 3)) % Math.ceil(listings.length / 3));
+      setCurrentSlide((prev) => (prev - 1 + Math.ceil(listings.length / 4)) % Math.ceil(listings.length / 4));
     }
   };
 
@@ -112,8 +112,9 @@ const FeaturedListings = () => {
             </div>
           ) : listings && listings.length > 0 ? (
             <>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12 animate-fade-in">
-                {listings.slice(currentSlide * 3, (currentSlide + 1) * 3).map((listing) => (
+              <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 mb-12 animate-fade-in">
+
+                {listings.slice(currentSlide * 4, (currentSlide + 1) * 4).map((listing) => (
                   <PropertyCard
                     key={listing.id}
                     listing={listing}
@@ -122,7 +123,7 @@ const FeaturedListings = () => {
                 ))}
               </div>
 
-              {listings.length > 3 && (
+              {listings.length > 4 && (
                 <div className="flex justify-center items-center space-x-6 mb-12">
                   <Button 
                     variant="outline" 
@@ -133,7 +134,7 @@ const FeaturedListings = () => {
                   </Button>
                   
                   <div className="flex space-x-2">
-                    {Array.from({ length: Math.ceil(listings.length / 3) }, (_, index) => (
+                    {Array.from({ length: Math.ceil(listings.length / 4) }, (_, index) => (
                       <button
                         key={index}
                         onClick={() => setCurrentSlide(index)}
