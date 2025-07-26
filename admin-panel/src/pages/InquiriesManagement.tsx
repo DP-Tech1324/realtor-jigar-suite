@@ -35,6 +35,10 @@ import {
 import { useInquiriesManagement } from '@/hooks/useInquiriesManagement';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
+// Import the admin chat bubble. Adding this provides a helpful assistant
+// for handling inquiries, guiding agents on best responses and actions.
+import AiChatBubble from '@/components/AiChatBubble';
+
 const InquiriesManagement = () => {
   const {
     inquiries,
@@ -337,6 +341,8 @@ const InquiriesManagement = () => {
           )}
         </DialogContent>
       </Dialog>
+      {/* AI assistant bubble anchored to the bottom‑right */}
+      <AiChatBubble />
     </div>
   );
 };
