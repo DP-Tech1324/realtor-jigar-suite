@@ -33,6 +33,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import InquiryForm from "@/components/InquiryForm";
 import { useNavigate } from "react-router-dom";
 
+// Import the shared AI chat bubble wrapper. This component renders a floating
+// chat interface using the shared base and client context. Injecting it here
+// allows visitors to ask questions about the property or the platform without
+// leaving the page.
+import AiChatBubble from '@/components/AiChatBubble';
+
 const PropertyDetails = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -491,6 +497,8 @@ const PropertyDetails = () => {
       )}
 
       <Footer />
+      {/* AI assistant bubble anchored to the bottom‑right of the page */}
+      <AiChatBubble />
     </div>
   );
 };

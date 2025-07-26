@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import PropertySearch from "@/components/PropertySearch"; // <- this is your filter bar!
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import AiChatBubble from "@/components/AiChatBubble";
 
 // Helper: parse URL params into filter fields matching your DB
 function parseFilters(search: string) {
@@ -23,7 +24,7 @@ function parseFilters(search: string) {
 }
 
 // Map search field names to DB columns
-function applyDbFilters(query, filters) {
+function applyDbFilters(query: any, filters: any) {
   if (filters.city) query = query.ilike("city", `%${filters.city}%`);
   if (filters.propertyType) query = query.eq("property_type", filters.propertyType);
 
@@ -50,7 +51,7 @@ function applyDbFilters(query, filters) {
     query = query.or([
       `title.ilike.%${filters.keywords}%`,
       `description.ilike.%${filters.keywords}%`,
-      `meta_keywords.ilike.%${filters.keywords}%`
+      `meta_keywords.ilike.%${filters.keywords}%`,
     ].join(","));
   }
   return query;
@@ -89,11 +90,11 @@ export default function ListingsPage() {
       {/* Filter bar at the top */}
       <PropertySearch
         initialValues={parseFilters(location.search)}
-        onSearch={filters => {
+        onSearch={(filters) => {
           const qs = new URLSearchParams(
             Object.entries(filters)
               .filter(([_, v]) => v !== "" && v !== undefined)
-              .map(([k, v]) => [k, String(v)])
+              .map(([k, v]) => [k, String(v)]),
           ).toString();
           navigate(qs ? `/listings?${qs}` : "/listings");
         }}
@@ -104,18 +105,30 @@ export default function ListingsPage() {
 
       {!loading && results.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-          {results.map(listing => (
-            <div key={listing.id} className="border rounded-lg shadow p-4 bg-white flex flex-col">
+          {results.map((listing) => (
+            <div
+              key={listing.id}
+              className="border rounded-lg shadow p-4 bg-white flex flex-col"
+            >
               <img
                 src={listing.cover_image || "https://via.placeholder.com/300x200"}
                 alt="Property"
                 className="w-full h-48 object-cover rounded mb-2"
               />
-              <div className="font-bold text-lg">{listing.title || listing.address}</div>
-              <div className="text-sm text-gray-600">{listing.city}{listing.province ? `, ${listing.province}` : ""}</div>
-              <div className="text-xs text-gray-500 mb-2">{listing.description?.slice(0, 80)}...</div>
+              <div className="font-bold text-lg">
+                {listing.title || listing.address}
+              </div>
+              <div className="text-sm text-gray-600">
+                {listing.city}
+                {listing.province ? `, ${listing.province}` : ""}
+              </div>
+              <div className="text-xs text-gray-500 mb-2">
+                {listing.description?.slice(0, 80)}...
+              </div>
               <div className="font-semibold text-blue-700 mb-2">
-                {listing.price ? `$${Number(listing.price).toLocaleString()}` : "Price on Request"}
+                {listing.price
+                  ? `$${Number(listing.price).toLocaleString()}`
+                  : "Price on Request"}
               </div>
               <Button
                 className="mt-auto"
@@ -130,6 +143,9 @@ export default function ListingsPage() {
       {!loading && results.length === 0 && !error && (
         <div className="text-center text-gray-500 mt-10">No listings found.</div>
       )}
+
+      {/* AI assistant bubble anchored to the bottom‑right */}
+      <AiChatBubble />
     </div>
   );
 }

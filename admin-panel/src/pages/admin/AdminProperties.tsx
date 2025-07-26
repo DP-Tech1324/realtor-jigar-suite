@@ -9,6 +9,11 @@ import { PropertyFormModal } from '@/components/property-management/PropertyForm
 import { Property } from '@/types/Property';
 import { useAdminProperties } from '@/hooks/useAdminProperties';
 
+// Import the admin AI chat bubble wrapper. This component provides context‑aware
+// assistance for property managers. It will appear as a floating widget on
+// this page without interfering with existing layouts.
+import AiChatBubble from '@/components/AiChatBubble';
+
 const AdminProperties = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
@@ -102,6 +107,9 @@ const AdminProperties = () => {
         onSubmit={handleFormSubmit}
         onClose={handleCloseModal}
       />
+
+      {/* AI assistant bubble anchored to the bottom‑right */}
+      <AiChatBubble />
     </div>
   );
 };
