@@ -1,5 +1,3 @@
-
-import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -153,7 +151,6 @@ const FAQ = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
       
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-blue-600 to-blue-800 py-20">
