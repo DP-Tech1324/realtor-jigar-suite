@@ -23,7 +23,7 @@ const Index = () => {
     { icon: TrendingUp, value: "500+", label: "Properties Sold" },
     { icon: Users, value: "400+", label: "Happy Families" },
     { icon: Calculator, value: "5+", label: "Years Experience" },
-    { icon: Star, value: "5.0", label: "Client Rating" },
+   /* { icon: Star, value: "5.0", label: "Client Rating" }, */
   ];
 
   return (
@@ -36,7 +36,7 @@ const Index = () => {
       {/* Quick Stats Section */}
       <section className="py-16 bg-white relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-3 gap-8">
             {stats.map((stat, index) => (
               <div key={index} className="text-center group animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">

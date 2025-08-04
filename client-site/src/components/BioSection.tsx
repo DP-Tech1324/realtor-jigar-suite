@@ -81,7 +81,7 @@ function BioSection() {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="flex items-center">
                   <Phone className="h-5 w-5 text-blue-600 mr-3" />
-                  <span className="text-slate-700">(416) 555-0123</span>
+                  <span className="text-slate-700">(647) 801-5448</span>
                 </div>
                 <div className="flex items-center">
                   <Mail className="h-5 w-5 text-blue-600 mr-3" />
@@ -157,9 +157,11 @@ function BioSection() {
 
           </div>
 
+          {/* Right: Professional Photo and Achievements */}
+
           <div className="space-y-8 animate-fade-in">
             {/* Professional Photo Placeholder */}
-           {/* <div className="relative">
+            <div className="relative">
               <div className="aspect-[4/5] bg-gradient-to-br from-blue-100 via-slate-100 to-blue-200 rounded-3xl flex items-center justify-center shadow-2xl overflow-hidden">
                 <div className="text-center p-10">
                  <img
@@ -171,16 +173,16 @@ function BioSection() {
                   <p className="text-slate-600 mb-4">Real Estate Professional</p>
                   
                 </div>
-              </div> */}
+              </div>
 
               {/* Floating achievement badge */}
               {/*<div className="absolute -top-4 -right-4 bg-yellow-500 text-black px-4 py-2 rounded-full font-bold shadow-lg">
                 <span className="text-sm">Top 1% Agent</span>
-              </div>
-            </div> */}
+              </div>*/}
+            </div> 
 
             {/* Achievement Stats */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-8">
               {achievements.map((achievement, index) => (
                 <div
                   key={index}

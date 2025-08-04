@@ -19,7 +19,10 @@ const DualCTA = () => {
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundImage: "url('/images/hero/background_agent.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          filter: "blur(8px)"
         }}></div>
       </div>
 
@@ -126,8 +129,11 @@ const DualCTA = () => {
         </div>
 
         {/* Bottom CTA */}
-        <div className="text-center bg-gradient-to-r from-slate-900 to-blue-900 rounded-3xl p-12 text-white">
+        
+        <div className="relative rounded-3xl overflow-hidden">
+         <div className="relative z-10 text-center p-12 text-blue-200 bg-gradient-to-r from-blue-600 to-blue-700 rounded-3xl">
           <h3 className="text-3xl md:text-4xl font-bold mb-6">
+            
             Ready to Get Started?
           </h3>
           <p className="text-xl text-blue-200 mb-8 max-w-2xl mx-auto">
@@ -144,11 +150,12 @@ const DualCTA = () => {
             <Button 
               size="lg"
               variant="outline"
-              onClick={() => navigate('/about')}
-              className="border-white text-white hover:bg-white hover:text-slate-900 px-8 py-4 text-lg rounded-xl"
+              onClick={() => navigate('')}
+              className="border-red-600 text-red-600 hover:bg-red-600 hover:text-slate-900 px-8 py-4 text-lg rounded-xl"
             >
               Learn More About Us
             </Button>
+            </div>
           </div>
         </div>
       </div>
