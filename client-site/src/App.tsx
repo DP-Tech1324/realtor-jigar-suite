@@ -8,9 +8,7 @@ import { AuthProvider } from "@/components/auth/AuthContext";
 
 
 // 💡 Add these:
-import AgentBar from "@/components/AgentBar";
 
-import TaglineBar from "@/components/TaglineBar";
 import ListingsPage from "@/pages/Listings";
 import MapSearch from "@/pages/MapSearch";
 
@@ -37,7 +35,6 @@ import Blog from "./pages/Blog";
 import Favorites from "./pages/Favorites";
 
 import Contact from "./pages/Contact";
-import ClassicNavbar from "@/components/Navbar";
 import Layout from "@/components/Layout";
 
 const queryClient = new QueryClient();

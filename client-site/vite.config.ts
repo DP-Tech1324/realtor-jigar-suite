@@ -23,4 +23,12 @@ export default defineConfig(({ mode }) => ({
       '@shared': path.resolve(__dirname, '../shared')
     },
   },
+  optimizeDeps: {
+    include: ['lucide-react'], // ✅ Add this line
+  },
+  build: {
+    rollupOptions: {
+      external: [], // Leave empty unless you want to exclude any package from the bundle
+    },
+  },
 }));

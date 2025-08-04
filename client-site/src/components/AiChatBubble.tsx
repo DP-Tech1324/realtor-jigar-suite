@@ -1,5 +1,5 @@
 import React from 'react';
-import AiChatBubbleBase from '../../../shared/ai/AiChatBubbleBase';
+import AiChatBubbleBase from '@/shared/ai/AiChatBubbleBase';
 
 /**
  * Wrapper component for the client site.
