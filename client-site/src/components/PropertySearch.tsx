@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Search, Home, MapPin, DollarSign, BedDouble, Bath } from "lucide-react";
+import { Search, Home, MapPin, DollarSign, BedDouble, Bath, Compass } from "lucide-react";
+import { DIRECTIONS, DIRECTION_LABELS } from "@/lib/vastu";
 
 const defaultFilters = {
   city: "",
@@ -11,6 +12,8 @@ const defaultFilters = {
   bathrooms: "",
   saleType: "sale", // "sale" or "rent"
   keywords: "",
+  facing: "",
+  vastu: "", // "1" = Vastu-friendly only (score 7+)
 };
 
 export default function PropertySearch({ onSearch, initialValues = {} }) {
@@ -30,7 +33,7 @@ export default function PropertySearch({ onSearch, initialValues = {} }) {
 
   // For filter chips
   const activeChips = Object.entries(filters)
-    .filter(([k, v]) => v && v !== "sale") // Only show non-empty filters (exclude default)
+    .filter(([k, v]) => v && v !== "sale" && k in defaultFilters) // Only show non-empty filters (exclude default)
     .map(([k, v]) => ({
       key: k,
       label:
@@ -48,6 +51,10 @@ export default function PropertySearch({ onSearch, initialValues = {} }) {
           ? `${v}+ Baths`
           : k === "keywords"
           ? `Keyword: ${v}`
+          : k === "facing"
+          ? `${DIRECTION_LABELS[v] || v} facing`
+          : k === "vastu"
+          ? "Vastu-friendly"
           : v,
     }));
 
@@ -205,6 +212,35 @@ export default function PropertySearch({ onSearch, initialValues = {} }) {
             >
               Reset Filters
             </Button>
+          </div>
+        </div>
+        {/* Vastu Row */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-5">
+          <div>
+            <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
+              <Compass className="h-4 w-4 mr-2 text-blue-600" /> Facing
+            </label>
+            <select
+              value={filters.facing}
+              onChange={(e) => handleInputChange("facing", e.target.value)}
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Any direction</option>
+              {DIRECTIONS.map((d) => (
+                <option key={d} value={d}>{DIRECTION_LABELS[d]}</option>
+              ))}
+            </select>
+          </div>
+          <div className="md:col-span-3 flex items-end">
+            <label className="flex items-center gap-3 px-4 py-2 border border-gray-200 rounded-xl cursor-pointer w-full md:w-auto min-h-[42px]">
+              <input
+                type="checkbox"
+                checked={filters.vastu === "1"}
+                onChange={(e) => handleInputChange("vastu", e.target.checked ? "1" : "")}
+                className="h-4 w-4 accent-blue-600"
+              />
+              <span className="text-sm font-medium text-gray-800">Vastu-friendly homes only (score 7+)</span>
+            </label>
           </div>
         </div>
         {/* Filter Chips */}

@@ -52,20 +52,8 @@ export function ImageUploader({ initialImages = [], onImagesChange, maxImages = 
     setUploadedImages(prev => prev.filter(url => url !== imageUrl));
     onImagesChange(uploadedImages.filter(url => url !== imageUrl));
     
-    // Optional: Remove from Supabase storage as well
-    // This would require extracting the path from the URL and calling supabase.storage.from('bucket').remove([path])
-    const path = imageUrl.split('/').pop();
-    if (path) {
-      supabase.storage
-        .from('property-images')
-        .remove([`property-images/${path}`])
-        .then(({ error }) => {
-          if (error) {
-            const errorMessage = error.message || 'Unknown error';
-            console.error('Error removing image from storage:', errorMessage);
-          }
-        });
-    }
+    // The file stays in storage until deleted from the Images page, so cancelling
+    // the form never leaves a saved listing pointing at a deleted photo.
   };
 
   const uploadFiles = async () => {
@@ -84,7 +72,7 @@ export function ImageUploader({ initialImages = [], onImagesChange, maxImages = 
       
       try {
         const { data, error } = await supabase.storage
-          .from('property-images')
+          .from('realtorjigar-images')
           .upload(filePath, file, {
             cacheControl: '3600',
             upsert: false,
@@ -93,7 +81,7 @@ export function ImageUploader({ initialImages = [], onImagesChange, maxImages = 
         if (error) throw error;
         
         const { data: { publicUrl } } = supabase.storage
-          .from('property-images')
+          .from('realtorjigar-images')
           .getPublicUrl(data.path);
         
         newImageUrls.push(publicUrl);

@@ -32,7 +32,10 @@ export const useAdminData = () => {
         supabase.from('listings').select('id, status', { count: 'exact' }),
         supabase.from('admin_users').select('id', { count: 'exact' }),
         supabase.from('inquiries').select('id, status', { count: 'exact' }),
-        supabase.from('realtorjigar_x8d1y_analytics').select('view_count').range(0, 100)
+        supabase
+          .from('listing_views')
+          .select('id', { count: 'exact', head: true })
+          .gte('viewed_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
       ]);
 
       const totalProperties = properties.count || 0;
@@ -40,7 +43,7 @@ export const useAdminData = () => {
       const totalUsers = users.count || 0;
       const totalInquiries = inquiries.count || 0;
       const pendingInquiries = inquiries.data?.filter(i => i.status === 'new').length || 0;
-      const monthlyViews = analytics.data?.reduce((sum, item) => sum + (item.view_count || 0), 0) || 0;
+      const monthlyViews = analytics.count || 0;
 
       setStats({
         totalProperties,

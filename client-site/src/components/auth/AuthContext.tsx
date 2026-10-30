@@ -50,12 +50,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         // Check if user is admin
         try {
-          const { data: roles } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', session.user.id);
-          
-          setIsAdmin(roles?.some(role => role.role === 'admin') ?? false);
+          // Same role source as the admin panel (admin_users via security-definer RPC)
+          const { data: role } = await supabase.rpc('get_current_user_role');
+          setIsAdmin(['superadmin', 'admin', 'editor'].includes(role as string));
         } catch (error) {
           console.error('Error checking admin role:', error);
           setIsAdmin(false);

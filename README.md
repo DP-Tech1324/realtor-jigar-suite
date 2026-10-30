@@ -4,8 +4,7 @@
 - Shared AI assistant (`shared/ai/`)
 
 ## ✅ Setup
-1. Run setup.py to clone, add AI features, and create demo pages.
-2. Install npm deps, run both apps, and test Home, /admin, /ai pages.
+See [docs/SETUP.md](docs/SETUP.md) for the database, first admin account, environment variables, deploy, Vastu and AI features.
 
 Built by Sankalp Tech & Solution Inc.
 

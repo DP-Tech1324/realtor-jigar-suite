@@ -19,7 +19,7 @@ export function useContactForm() {
     try {
       // Insert contact request into Supabase
       const { error } = await supabase
-        .from('realtorjigar_x8d1y_inquiries')
+        .from('inquiries')
         .insert({
           name: data.name,
           email: data.email,

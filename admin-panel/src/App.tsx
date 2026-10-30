@@ -33,7 +33,7 @@ const queryClient = new QueryClient({
 const allowedRoles = ["admin", "superadmin", "editor"];
 
 function isLoggedIn() {
-  const role = localStorage.getItem('user_role');
+  const role = localStorage.getItem('userRole');
   return allowedRoles.includes(role);
 }
 

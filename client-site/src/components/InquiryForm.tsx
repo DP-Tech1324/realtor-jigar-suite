@@ -10,14 +10,15 @@ import { Loader2 } from 'lucide-react';
 interface InquiryFormProps {
   listingId?: string;
   listingTitle?: string;
+  initialMessage?: string;
 }
 
-const InquiryForm: React.FC<InquiryFormProps> = ({ listingId, listingTitle }) => {
+const InquiryForm: React.FC<InquiryFormProps> = ({ listingId, listingTitle, initialMessage }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    message: listingTitle ? `I'm interested in "${listingTitle}". Please contact me.` : '',
+    message: initialMessage ?? (listingTitle ? `I'm interested in "${listingTitle}". Please contact me.` : ''),
   });
 
   const createInquiry = useCreateInquiry();

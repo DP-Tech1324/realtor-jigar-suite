@@ -2,8 +2,9 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Bed, Bath, Square, MapPin, Camera, Eye } from 'lucide-react';
-import { Listing } from '@/hooks/useListings';
+import { Heart, Bed, Bath, Square, MapPin, Camera, Eye, Compass } from 'lucide-react';
+import { Listing, listingImages } from '@/hooks/useListings';
+import { parseVastu } from '@/lib/vastu';
 import { useIsFavorite, useToggleFavorite } from '@/hooks/useFavorites';
 import { useAuth } from '@/components/auth/AuthContext';
 
@@ -41,8 +42,10 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ listing, onViewDetails }) =
     }
   };
 
-  const primaryImage = listing.images?.[0] || 'https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?auto=format&fit=crop&w=800&q=80';
-  const imageCount = listing.images?.length || 1;
+  const gallery = listingImages(listing);
+  const primaryImage = gallery[0] || 'https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?auto=format&fit=crop&w=800&q=80';
+  const imageCount = gallery.length || 1;
+  const showVastu = !!parseVastu(listing.vastu)?.enabled && listing.vastu_score != null;
 
   return (
     <div className="group bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden border border-slate-100">
@@ -58,10 +61,23 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ listing, onViewDetails }) =
         
         {/* Top badges and actions */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
-          <div className="space-y-2">
+          <div className="flex flex-col items-start gap-2">
             <Badge className="bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium px-3 py-1 shadow-lg">
               {listing.property_type.replace('_', ' ').toUpperCase()}
             </Badge>
+            {showVastu && (
+              <Badge className={`font-bold px-3 py-1 shadow-lg flex items-center gap-1 w-fit ${
+                listing.vastu_score! >= 7 ? 'bg-green-600 text-white' : 'bg-white text-slate-800'
+              }`}>
+                <Compass className="h-3 w-3" aria-hidden="true" />
+                {listing.facing ? `${listing.facing} · ` : ''}Vastu {listing.vastu_score}/10
+              </Badge>
+            )}
+            {listing.status === 'sold' && (
+              <Badge className="bg-slate-800 text-white font-bold px-3 py-1 shadow-lg w-fit">
+                {listing.transaction_type === 'rent' ? 'LEASED' : 'SOLD'}
+              </Badge>
+            )}
             {listing.price && listing.price > 1500000 && (
               <Badge className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold px-3 py-1 shadow-lg">
                 Luxury

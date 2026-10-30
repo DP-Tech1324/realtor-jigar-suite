@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Property } from '@/types/Property';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
-import { transformPropertyFromDb } from '@/lib/utils';
+import { transformPropertyFromDb, transformPropertyToDb } from '@/lib/utils';
 
 export function useAdminProperties() {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -51,7 +51,7 @@ export function useAdminProperties() {
       }
 
       const { data, error } = await supabase.from('listings').insert([
-        { ...formData, images, cover_image: coverImageUrl }
+        { ...transformPropertyToDb(formData), images, cover_image: coverImageUrl || images[0] || null }
       ]).select();
 
       if (error) throw error;
@@ -88,9 +88,9 @@ export function useAdminProperties() {
       }
 
       const { error, data } = await supabase.from('listings').update({
-        ...formData,
+        ...transformPropertyToDb(formData),
         images,
-        cover_image: coverImageUrl,
+        cover_image: coverImageUrl || images[0] || null,
       }).eq('id', editingProperty.id).select();
 
       if (error) throw error;
@@ -120,7 +120,7 @@ export function useAdminProperties() {
     const newStatus = currentStatus === 'published' ? 'draft' : 'published';
     const { data, error } = await supabase
       .from('listings')
-      .update({ status: newStatus })
+      .update({ status: newStatus === 'published' ? 'active' : 'draft' })
       .eq('id', id)
       .select();
 

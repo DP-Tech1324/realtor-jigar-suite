@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +26,10 @@ import {
   Clock,
   CheckCircle
 } from "lucide-react";
-import { useListing } from "@/hooks/useListings";
+import { useListing, listingImages } from "@/hooks/useListings";
+import { supabase } from "@/integrations/supabase/client";
+import VastuSection from "@/components/VastuSection";
+import { parseVastu } from "@/lib/vastu";
 import { useIsFavorite, useToggleFavorite } from "@/hooks/useFavorites";
 import { useAuth } from "@/components/auth/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -49,6 +52,28 @@ const PropertyDetails = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showFullscreen, setShowFullscreen] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
+  const [contactMessage, setContactMessage] = useState<string | undefined>();
+
+  // Count one view per page load for the admin dashboard
+  useEffect(() => {
+    if (id) supabase.from('listing_views').insert({ listing_id: id }).then(() => {});
+  }, [id]);
+
+  // Use the SEO fields from the admin panel for the browser title and meta description
+  useEffect(() => {
+    if (!listing) return;
+    const previousTitle = document.title;
+    document.title = listing.seo_title || `${listing.title} | Jigar Patel Real Estate`;
+    const meta = document.querySelector('meta[name="description"]');
+    const previousDescription = meta?.getAttribute('content');
+    if (meta && (listing.seo_description || listing.description)) {
+      meta.setAttribute('content', listing.seo_description || listing.description!.slice(0, 155));
+    }
+    return () => {
+      document.title = previousTitle;
+      if (meta && previousDescription != null) meta.setAttribute('content', previousDescription);
+    };
+  }, [listing]);
 
   if (isLoading) {
     return (
@@ -102,7 +127,15 @@ const PropertyDetails = () => {
     );
   }
 
-  const images = listing.images || ['https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?auto=format&fit=crop&w=800&q=80'];
+  const gallery = listingImages(listing);
+  const images = gallery.length ? gallery : ['https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?auto=format&fit=crop&w=800&q=80'];
+  const vastu = parseVastu(listing.vastu);
+  const showVastu = !!vastu?.enabled && listing.vastu_score != null;
+
+  const openContact = (message?: string) => {
+    setContactMessage(message);
+    setShowContactForm(true);
+  };
   
   const formatPrice = (price?: number) => {
     if (!price) return 'Price on request';
@@ -252,9 +285,20 @@ const PropertyDetails = () => {
               <div className="animate-fade-in">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                   <div className="flex-1">
-                    <Badge className="bg-blue-600 text-white mb-3">
-                      {listing.property_type.replace('_', ' ').toUpperCase()}
-                    </Badge>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      <Badge className="bg-blue-600 text-white">
+                        {listing.property_type.replace('_', ' ').toUpperCase()}
+                      </Badge>
+                      {listing.status === 'pending' && <Badge className="bg-amber-500 text-white">PENDING</Badge>}
+                      {listing.status === 'sold' && <Badge className="bg-slate-700 text-white">{listing.transaction_type === 'rent' ? 'LEASED' : 'SOLD'}</Badge>}
+                      {showVastu && (
+                        <a href="#vastu">
+                          <Badge className="bg-green-100 text-green-800 hover:bg-green-200 border border-green-300">
+                            {listing.facing ? `${listing.facing}-facing · ` : ''}Vastu {listing.vastu_score}/10
+                          </Badge>
+                        </a>
+                      )}
+                    </div>
                     <h1 className="text-2xl md:text-4xl font-bold text-slate-900 mb-3">
                       {listing.title}
                     </h1>
@@ -324,6 +368,18 @@ const PropertyDetails = () => {
                   </div>
                 </div>
               </div>
+
+              {showVastu && (
+                <>
+                  <Separator />
+                  <VastuSection
+                    vastu={listing.vastu}
+                    facing={listing.facing}
+                    onAsk={() => openContact(`Hi Jigar, I have a Vastu question about "${listing.title}": `)}
+                  />
+                  <Separator />
+                </>
+              )}
 
               {/* Market Insights */}
               <div className="animate-fade-in">
@@ -397,18 +453,22 @@ const PropertyDetails = () => {
                   </div>
                   
                   <div className="space-y-3">
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-lg py-3">
-                      <Phone className="h-5 w-5 mr-2" />
-                      Call Now
+                    <Button asChild className="w-full bg-blue-600 hover:bg-blue-700 text-lg py-3">
+                      <a href="tel:+16478015448">
+                        <Phone className="h-5 w-5 mr-2" />
+                        Call Now
+                      </a>
                     </Button>
-                    <Button variant="outline" className="w-full text-lg py-3">
-                      <Mail className="h-5 w-5 mr-2" />
-                      Send Email
+                    <Button asChild variant="outline" className="w-full text-lg py-3">
+                      <a href={`mailto:jigar@jigarpatelrealestate.com?subject=${encodeURIComponent(`Inquiry: ${listing.title}`)}&body=${encodeURIComponent(`Hi Jigar,\n\nI'm interested in ${listing.title} (${window.location.href}).\n\n`)}`}>
+                        <Mail className="h-5 w-5 mr-2" />
+                        Send Email
+                      </a>
                     </Button>
                     <Button 
                       variant="outline" 
                       className="w-full text-lg py-3"
-                      onClick={() => setShowContactForm(true)}
+                      onClick={() => openContact()}
                     >
                       <Calendar className="h-5 w-5 mr-2" />
                       Schedule Viewing
@@ -490,7 +550,7 @@ const PropertyDetails = () => {
                   <X className="h-6 w-6" />
                 </Button>
               </div>
-              <InquiryForm />
+              <InquiryForm listingId={listing.id} listingTitle={listing.title} initialMessage={contactMessage} />
             </div>
           </div>
         </div>

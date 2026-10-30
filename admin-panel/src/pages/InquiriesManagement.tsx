@@ -7,8 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   MessageSquare, Search, Filter, Mail, Phone, Calendar,
-  MoreHorizontal, Eye, Trash2, CheckCircle 
+  MoreHorizontal, Eye, Trash2, CheckCircle, Sparkles, Loader, Copy
 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { callAI } from '@/lib/ai';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,10 +39,6 @@ import {
 import { useInquiriesManagement } from '@/hooks/useInquiriesManagement';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
-// Import the admin chat bubble. Adding this provides a helpful assistant
-// for handling inquiries, guiding agents on best responses and actions.
-import AiChatBubble from '@/components/AiChatBubble';
-
 const InquiriesManagement = () => {
   const {
     inquiries,
@@ -53,6 +53,30 @@ const InquiriesManagement = () => {
 
   const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [draftReply, setDraftReply] = useState('');
+  const [drafting, setDrafting] = useState(false);
+  const { toast } = useToast();
+
+  const draftWithAI = async () => {
+    if (!selectedInquiry) return;
+    setDrafting(true);
+    try {
+      let listingTitle: string | undefined;
+      if (selectedInquiry.property_id) {
+        const { data } = await supabase.from('listings').select('title').eq('id', selectedInquiry.property_id).maybeSingle();
+        listingTitle = data?.title;
+      }
+      const { reply } = await callAI<{ reply: string }>('inquiry_reply', {
+        inquiry: { name: selectedInquiry.name, message: selectedInquiry.message },
+        listing_title: listingTitle,
+      });
+      setDraftReply(reply);
+    } catch (e: any) {
+      toast({ title: 'Could not draft a reply', description: e.message, variant: 'destructive' });
+    } finally {
+      setDrafting(false);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -224,6 +248,7 @@ const InquiriesManagement = () => {
                         <DropdownMenuItem 
                           onClick={() => {
                             setSelectedInquiry(inquiry);
+                            setDraftReply('');
                             setViewDialogOpen(true);
                           }}
                           className="cursor-pointer"
@@ -323,6 +348,31 @@ const InquiriesManagement = () => {
                 </div>
               </div>
               
+              <div className="space-y-2 rounded-lg border border-dashed p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <label className="text-sm font-medium text-gray-600">Reply</label>
+                  <Button type="button" variant="outline" size="sm" onClick={draftWithAI} disabled={drafting}>
+                    {drafting ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4 text-realtor-gold" />}
+                    {draftReply ? 'Draft again' : 'Draft reply with AI'}
+                  </Button>
+                </div>
+                {draftReply && (
+                  <>
+                    <Textarea rows={7} value={draftReply} onChange={(e) => setDraftReply(e.target.value)} />
+                    <div className="flex flex-wrap gap-2">
+                      <Button asChild size="sm" className="bg-realtor-navy hover:bg-realtor-navy/90">
+                        <a href={`mailto:${selectedInquiry.email}?subject=${encodeURIComponent('Re: your inquiry')}&body=${encodeURIComponent(draftReply)}`}>
+                          <Mail className="mr-2 h-4 w-4" /> Open in email
+                        </a>
+                      </Button>
+                      <Button type="button" size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(draftReply); toast({ title: 'Reply copied' }); }}>
+                        <Copy className="mr-2 h-4 w-4" /> Copy
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
+
               <div className="flex gap-2">
                 <Button 
                   onClick={() => updateInquiryStatus(selectedInquiry.id, 'in-progress')}
@@ -341,8 +391,6 @@ const InquiriesManagement = () => {
           )}
         </DialogContent>
       </Dialog>
-      {/* AI assistant bubble anchored to the bottom‑right */}
-      <AiChatBubble />
     </div>
   );
 };
