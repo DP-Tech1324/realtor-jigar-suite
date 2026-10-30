@@ -74,6 +74,11 @@ export function PropertyCard({ property, onEdit, onDelete, onToggleStatus }: Pro
               Featured
             </Badge>
           )}
+          {property.vastu?.enabled && property.vastu_score != null && (
+            <Badge className="bg-green-100 text-green-800">
+              Vastu {property.vastu_score}/10
+            </Badge>
+          )}
         </div>
       </div>
 

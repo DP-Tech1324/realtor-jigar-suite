@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import type { Direction } from '@/lib/vastu';
 
 export interface Listing {
   id: string;
@@ -27,7 +28,19 @@ export interface Listing {
   year_built?: number;
   lot_size?: number;
   features?: any;
+  cover_image?: string;
+  transaction_type?: 'sale' | 'rent';
+  virtual_tour_url?: string;
+  seo_title?: string;
+  seo_description?: string;
+  facing?: Direction | null;
+  vastu?: unknown;
+  vastu_score?: number | null;
 }
+
+// Cover photo first, then the gallery, without duplicates
+export const listingImages = (listing: Pick<Listing, 'images' | 'cover_image'>): string[] =>
+  Array.from(new Set([listing.cover_image, ...(listing.images || [])].filter(Boolean) as string[]));
 
 export interface SearchFilters {
   city?: string;
@@ -121,14 +134,10 @@ export const useCreateInquiry = () => {
       message: string;
       listing_id?: string;
     }) => {
-      const { data, error } = await supabase
-        .from('inquiries')
-        .insert(inquiry)
-        .select()
-        .single();
+      // No .select(): visitors may submit inquiries but not read them back (RLS)
+      const { error } = await supabase.from('inquiries').insert(inquiry);
 
       if (error) throw error;
-      return data;
     },
     onSuccess: () => {
       toast({

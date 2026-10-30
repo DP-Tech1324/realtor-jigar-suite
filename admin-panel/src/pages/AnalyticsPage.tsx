@@ -1,9 +1,10 @@
-
-import React, { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { PROPERTY_TYPE_LABELS, PropertyType } from '@/types/Property';
 import {
   BarChart,
   LineChart,
@@ -19,82 +20,117 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { BarChart3, LineChart as LineChartIcon, PieChart as PieChartIcon, Building, User, MessageSquare } from 'lucide-react';
-
-// Mock analytics data
-const pageViewsData = [
-  { name: 'Jan', views: 1200 },
-  { name: 'Feb', views: 1900 },
-  { name: 'Mar', views: 2200 },
-  { name: 'Apr', views: 2800 },
-  { name: 'May', views: 3500 }
-];
-
-const userInteractionsData = [
-  { name: 'Jan', inquiries: 14, consultations: 5 },
-  { name: 'Feb', inquiries: 18, consultations: 8 },
-  { name: 'Mar', inquiries: 23, consultations: 12 },
-  { name: 'Apr', inquiries: 29, consultations: 18 },
-  { name: 'May', inquiries: 35, consultations: 24 }
-];
-
-const propertyTypeData = [
-  { name: 'Houses', value: 42 },
-  { name: 'Condos', value: 28 },
-  { name: 'Townhouses', value: 19 },
-  { name: 'Land', value: 11 }
-];
-
-const propertyStatusData = [
-  { name: 'Jan', forSale: 24, sold: 8, pending: 3 },
-  { name: 'Feb', forSale: 28, sold: 12, pending: 5 },
-  { name: 'Mar', forSale: 32, sold: 15, pending: 7 },
-  { name: 'Apr', forSale: 38, sold: 19, pending: 6 },
-  { name: 'May', forSale: 42, sold: 22, pending: 9 }
-];
-
-const cityDistributionData = [
-  { name: 'Toronto', value: 45 },
-  { name: 'Woodbridge', value: 25 },
-  { name: 'Richmond Hill', value: 15 },
-  { name: 'Vaughan', value: 15 }
-];
+import { BarChart3, LineChart as LineChartIcon, PieChart as PieChartIcon, Building, Eye, MessageSquare } from 'lucide-react';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+const DAY = 24 * 60 * 60 * 1000;
+
+type Slice = { name: string; value: number };
+
+function countBy<T>(rows: T[], key: (row: T) => string): Slice[] {
+  const counts = new Map<string, number>();
+  rows.forEach((row) => counts.set(key(row), (counts.get(key(row)) || 0) + 1));
+  return [...counts.entries()].map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+}
+
+// Keeps pies readable: top 5 slices, the rest grouped as "Other"
+function topSlices(slices: Slice[], limit = 5): Slice[] {
+  if (slices.length <= limit) return slices;
+  const rest = slices.slice(limit - 1).reduce((sum, s) => sum + s.value, 0);
+  return [...slices.slice(0, limit - 1), { name: 'Other', value: rest }];
+}
 
 const AnalyticsPage = () => {
-  const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
-  
-  // Check if user is admin
-  useEffect(() => {
-    const checkAdminStatus = () => {
-      setIsAdmin(localStorage.getItem('isAdmin') === 'true');
-    };
-    
-    checkAdminStatus();
-    
-    // Listen for storage changes
-    window.addEventListener('storage', checkAdminStatus);
-    
-    return () => {
-      window.removeEventListener('storage', checkAdminStatus);
-    };
-  }, []);
-  
-  // Summary statistics
-  const totalProperties = 98;
-  const totalUsers = 245;
-  const totalInquiries = 135;
+  const [loading, setLoading] = useState(true);
+  const [totalProperties, setTotalProperties] = useState(0);
+  const [monthlyViews, setMonthlyViews] = useState(0);
+  const [monthlyInquiries, setMonthlyInquiries] = useState(0);
+  const [pageViewsData, setPageViewsData] = useState<{ name: string; views: number }[]>([]);
+  const [userInteractionsData, setUserInteractionsData] = useState<{ name: string; inquiries: number; consultations: number }[]>([]);
+  const [propertyTypeData, setPropertyTypeData] = useState<Slice[]>([]);
+  const [propertyStatusData, setPropertyStatusData] = useState<{ name: string; value: number }[]>([]);
+  const [cityDistributionData, setCityDistributionData] = useState<Slice[]>([]);
+  const [topListings, setTopListings] = useState<{ title: string; views: number }[]>([]);
 
-  // If not admin, redirect to homepage
-  if (!isAdmin) {
-    toast({
-      title: "Access Denied",
-      description: "You need administrator privileges to access this page.",
-      variant: "destructive",
-    });
-    return <Navigate to="/admin" />;
+  useEffect(() => {
+    const load = async () => {
+      const since30 = new Date(Date.now() - 29 * DAY);
+      since30.setHours(0, 0, 0, 0);
+      const since6m = new Date();
+      since6m.setMonth(since6m.getMonth() - 5, 1);
+      since6m.setHours(0, 0, 0, 0);
+
+      const [listings, views, inquiries, consultations] = await Promise.all([
+        supabase.from('listings').select('id, title, property_type, status, city'),
+        supabase.from('listing_views').select('listing_id, viewed_at').gte('viewed_at', since30.toISOString()).limit(50000),
+        supabase.from('inquiries').select('created_at').gte('created_at', since6m.toISOString()),
+        supabase.from('consultations').select('created_at').gte('created_at', since6m.toISOString()),
+      ]);
+      const failed = [listings, views, inquiries, consultations].find((r) => r.error);
+      if (failed?.error) {
+        toast({ title: 'Error loading analytics', description: failed.error.message, variant: 'destructive' });
+      }
+
+      const listingRows = listings.data || [];
+      const viewRows = views.data || [];
+      const inquiryRows = inquiries.data || [];
+      const consultationRows = consultations.data || [];
+
+      setTotalProperties(listingRows.length);
+      setMonthlyViews(viewRows.length);
+      setMonthlyInquiries(inquiryRows.filter((r) => new Date(r.created_at) >= since30).length);
+
+      // Views per day for the last 30 days
+      const days = Array.from({ length: 30 }, (_, i) => new Date(since30.getTime() + i * DAY));
+      const viewsByDay = new Map(days.map((d) => [d.toDateString(), 0]));
+      viewRows.forEach((v) => {
+        const key = new Date(v.viewed_at).toDateString();
+        if (viewsByDay.has(key)) viewsByDay.set(key, viewsByDay.get(key)! + 1);
+      });
+      setPageViewsData(days.map((d) => ({
+        name: d.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }),
+        views: viewsByDay.get(d.toDateString()) || 0,
+      })));
+
+      // Leads per month for the last 6 months
+      const months = Array.from({ length: 6 }, (_, i) => new Date(since6m.getFullYear(), since6m.getMonth() + i, 1));
+      const monthKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}`;
+      const tally = (rows: { created_at: string }[]) => {
+        const map = new Map<string, number>();
+        rows.forEach((r) => map.set(monthKey(new Date(r.created_at)), (map.get(monthKey(new Date(r.created_at))) || 0) + 1));
+        return map;
+      };
+      const inquiryMonths = tally(inquiryRows);
+      const consultationMonths = tally(consultationRows);
+      setUserInteractionsData(months.map((m) => ({
+        name: m.toLocaleDateString('en-CA', { month: 'short' }),
+        inquiries: inquiryMonths.get(monthKey(m)) || 0,
+        consultations: consultationMonths.get(monthKey(m)) || 0,
+      })));
+
+      setPropertyTypeData(topSlices(countBy(listingRows, (l) => PROPERTY_TYPE_LABELS[l.property_type as PropertyType] || l.property_type)));
+      const statusLabels: Record<string, string> = { active: 'Available', pending: 'Pending', sold: 'Sold', draft: 'Draft' };
+      setPropertyStatusData(['active', 'pending', 'sold', 'draft'].map((st) => ({
+        name: statusLabels[st],
+        value: listingRows.filter((l) => l.status === st).length,
+      })));
+      setCityDistributionData(topSlices(countBy(listingRows, (l) => (l.city || 'Unknown').trim())));
+
+      const titles = new Map(listingRows.map((l) => [l.id, l.title]));
+      setTopListings(countBy(viewRows, (v) => v.listing_id).slice(0, 8).map((s) => ({ title: titles.get(s.name) || 'Deleted listing', views: s.value })));
+
+      setLoading(false);
+    };
+    load();
+  }, [toast]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <LoadingSpinner size="lg" text="Loading analytics..." />
+      </div>
+    );
   }
 
   return (
@@ -115,20 +151,20 @@ const AnalyticsPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{totalProperties}</div>
-            <p className="text-sm text-muted-foreground">Across all categories</p>
+            <p className="text-sm text-muted-foreground">Including drafts</p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
-              <User className="h-5 w-5 text-realtor-gold" /> 
-              Registered Users
+              <Eye className="h-5 w-5 text-realtor-gold" /> 
+              Listing Views
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{totalUsers}</div>
-            <p className="text-sm text-muted-foreground">Active in the last 30 days</p>
+            <div className="text-3xl font-bold">{monthlyViews.toLocaleString()}</div>
+            <p className="text-sm text-muted-foreground">Property page views, last 30 days</p>
           </CardContent>
         </Card>
         
@@ -140,8 +176,8 @@ const AnalyticsPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{totalInquiries}</div>
-            <p className="text-sm text-muted-foreground">From contacts and consultations</p>
+            <div className="text-3xl font-bold">{monthlyInquiries}</div>
+            <p className="text-sm text-muted-foreground">Website inquiries, last 30 days</p>
           </CardContent>
         </Card>
       </div>
@@ -165,17 +201,16 @@ const AnalyticsPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Page Views Over Time</CardTitle>
+                <CardTitle>Listing Views, Last 30 Days</CardTitle>
               </CardHeader>
               <CardContent className="pt-2">
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={pageViewsData}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
+                      <XAxis dataKey="name" interval="preserveStartEnd" minTickGap={24} />
+                      <YAxis allowDecimals={false} />
                       <Tooltip />
-                      <Legend />
                       <Line 
                         type="monotone" 
                         dataKey="views" 
@@ -191,7 +226,7 @@ const AnalyticsPage = () => {
             
             <Card>
               <CardHeader>
-                <CardTitle>User Interactions</CardTitle>
+                <CardTitle>Leads per Month</CardTitle>
               </CardHeader>
               <CardContent className="pt-2">
                 <div className="h-[300px]">
@@ -202,8 +237,8 @@ const AnalyticsPage = () => {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="inquiries" fill="#1f2937" />
-                      <Bar dataKey="consultations" fill="#d4a12a" />
+                      <Bar dataKey="inquiries" name="Inquiries" fill="#1f2937" />
+                      <Bar dataKey="consultations" name="Consultations" fill="#d4a12a" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -247,20 +282,17 @@ const AnalyticsPage = () => {
             
             <Card>
               <CardHeader>
-                <CardTitle>Property Status Over Time</CardTitle>
+                <CardTitle>Listings by Status</CardTitle>
               </CardHeader>
               <CardContent className="pt-2">
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={propertyStatusData}>
-                      <CartesianGrid strokeDasharray="3 3" />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis dataKey="name" />
-                      <YAxis />
+                      <YAxis allowDecimals={false} />
                       <Tooltip />
-                      <Legend />
-                      <Bar dataKey="forSale" fill="#1f2937" />
-                      <Bar dataKey="sold" fill="#10b981" />
-                      <Bar dataKey="pending" fill="#f59e0b" />
+                      <Bar dataKey="value" name="Listings" fill="#1f2937" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -269,6 +301,29 @@ const AnalyticsPage = () => {
           </div>
         </TabsContent>
         
+        {/* Most viewed */}
+        <TabsContent value="properties">
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Most Viewed Listings, Last 30 Days</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {topListings.length === 0 ? (
+                <p className="text-sm text-gray-500">No views recorded yet.</p>
+              ) : (
+                <ul className="divide-y">
+                  {topListings.map((l, i) => (
+                    <li key={i} className="flex justify-between gap-4 py-2 text-sm">
+                      <span className="truncate">{l.title}</span>
+                      <span className="font-semibold tabular-nums">{l.views.toLocaleString()}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Geography Tab */}
         <TabsContent value="geography">
           <Card>

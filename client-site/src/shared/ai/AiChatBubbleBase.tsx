@@ -41,7 +41,7 @@ function cleanAIReply(content: string) {
 const welcomeMsg: Message = {
   role: 'assistant',
   content:
-    "👋 Hi! I'm your AI assistant. Ask me anything about the platform or your work!",
+    "👋 Hi! Ask me about homes, buying, selling or Vastu.",
 };
 
 const AiChatBubbleBase: React.FC<AiChatBubbleProps> = ({ context, className }) => {
@@ -85,7 +85,7 @@ const AiChatBubbleBase: React.FC<AiChatBubbleProps> = ({ context, className }) =
     setInput('');
     setLoading(true);
     try {
-      const reply = await chatWithAgent(trimmed, context);
+      const reply = await chatWithAgent(newMessages.filter((m) => m !== welcomeMsg));
       setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
     } catch (err) {
       console.error('AI error:', err);

@@ -11,14 +11,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { PropertyFormData } from '@/hooks/usePropertyManagement';
+import { Property, PROPERTY_TYPE_LABELS, PropertyType } from '@/types/Property';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ImageUploader } from './ImageUploader';
-import { Loader } from 'lucide-react';
+import { Loader, Sparkles } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { VastuEditor } from './VastuEditor';
+import { callAI } from '@/lib/ai';
+import { emptyVastu, evaluateVastu, type Direction, type VastuData } from '@/lib/vastu';
 
 interface PropertyFormProps {
-  onSubmit: (formData: PropertyFormData, coverImage?: File, additionalImages?: string[]) => Promise<void>;
-  initialData?: Partial<PropertyFormData>;
+  onSubmit: (formData: Partial<Property>, coverImage?: File, additionalImages?: string[]) => Promise<void>;
+  initialData?: Partial<Property>;
   isSubmitting?: boolean;
   onCancel?: () => void;
 }
@@ -33,7 +37,12 @@ const propertySchema = z.object({
   bedrooms: z.coerce.number().int().nonnegative("Bedrooms must be a non-negative number"),
   bathrooms: z.coerce.number().nonnegative("Bathrooms must be a non-negative number"),
   square_feet: z.coerce.number().nonnegative("Square footage must be a non-negative number"),
-  property_type: z.enum(['house', 'condo', 'townhouse', 'land']),
+  lot_size: z.coerce.number().nonnegative().optional(),
+  year_built: z.coerce.number().int().min(0).max(2100).optional(),
+  postal_code: z.string().max(10).optional(),
+  property_type: z.enum(['single_family', 'condo', 'townhouse', 'multi_family', 'land', 'commercial']),
+  transaction_type: z.enum(['sale', 'rent']),
+  market_status: z.enum(['for-sale', 'pending', 'sold']),
   description: z.string().min(10, "Description must be at least 10 characters").max(2000, "Description must be less than 2000 characters"),
   status: z.enum(['published', 'draft']),
   featured: z.boolean(),
@@ -50,6 +59,10 @@ export function PropertyForm({ onSubmit, initialData, isSubmitting, onCancel }: 
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [additionalImages, setAdditionalImages] = useState<string[]>(initialData?.images || []);
   const [activeTab, setActiveTab] = useState<string>("basic");
+  const [vastu, setVastu] = useState<VastuData>(initialData?.vastu ?? emptyVastu());
+  const [facing, setFacing] = useState<Direction | null>(initialData?.facing ?? null);
+  const [aiBusy, setAiBusy] = useState<'describe' | 'seo' | null>(null);
+  const { toast } = useToast();
 
   // Initialize form with react-hook-form and zod validation
   const form = useForm<PropertyFormValues>({
@@ -63,7 +76,12 @@ export function PropertyForm({ onSubmit, initialData, isSubmitting, onCancel }: 
       bedrooms: initialData?.bedrooms || 1,
       bathrooms: initialData?.bathrooms || 1,
       square_feet: initialData?.square_feet || 0,
-      property_type: (initialData?.property_type as 'house' | 'condo' | 'townhouse' | 'land') || 'house',
+      lot_size: initialData?.lot_size || undefined,
+      year_built: initialData?.year_built || undefined,
+      postal_code: initialData?.postal_code || '',
+      property_type: (initialData?.property_type as PropertyType) || 'single_family',
+      transaction_type: initialData?.transaction_type || 'sale',
+      market_status: initialData?.market_status || 'for-sale',
       description: initialData?.description || '',
       status: (initialData?.status as 'published' | 'draft') || 'draft',
       featured: initialData?.featured || false,
@@ -76,7 +94,48 @@ export function PropertyForm({ onSubmit, initialData, isSubmitting, onCancel }: 
   });
 
   const handleFormSubmit = async (data: PropertyFormValues) => {
-    await onSubmit(data as PropertyFormData, coverImage || undefined, additionalImages);
+    await onSubmit({ ...data, vastu, facing } as Partial<Property>, coverImage || undefined, additionalImages);
+  };
+
+  // Jump to the tab holding the first invalid field, since hidden tabs hide their errors
+  const handleInvalid = (errors: Record<string, unknown>) => {
+    const seoFields = ['seo_title', 'seo_description', 'meta_keywords', 'virtual_tour_url'];
+    const first = Object.keys(errors)[0];
+    if (first === 'mls_number') setActiveTab('mls');
+    else if (seoFields.includes(first)) setActiveTab('seo');
+    else setActiveTab('basic');
+  };
+
+  // Current form state in the shape api/ai.js expects
+  const listingForAI = () => {
+    const values = form.getValues();
+    const { checks, score } = vastu.enabled ? evaluateVastu(vastu, facing) : { checks: [], score: null };
+    return {
+      ...values,
+      facing: vastu.enabled ? facing : undefined,
+      vastu_score: score ?? undefined,
+      vastu_checks: checks.length ? checks.map((c) => `${c.label}: ${c.value} (${c.verdict.replace('_', ' ')})`) : undefined,
+    };
+  };
+
+  const runAI = async (action: 'describe' | 'seo') => {
+    setAiBusy(action);
+    try {
+      if (action === 'describe') {
+        const { description } = await callAI<{ description: string }>('describe', { listing: listingForAI() });
+        form.setValue('description', description.slice(0, 2000), { shouldValidate: true, shouldDirty: true });
+      } else {
+        const seo = await callAI<{ seo_title: string; seo_description: string; meta_keywords: string }>('seo', { listing: listingForAI() });
+        form.setValue('seo_title', seo.seo_title.slice(0, 70), { shouldValidate: true, shouldDirty: true });
+        form.setValue('seo_description', seo.seo_description.slice(0, 160), { shouldValidate: true, shouldDirty: true });
+        form.setValue('meta_keywords', seo.meta_keywords.slice(0, 200), { shouldValidate: true, shouldDirty: true });
+      }
+      toast({ title: action === 'describe' ? 'Description written' : 'SEO fields filled', description: 'Review and edit before saving.' });
+    } catch (e: any) {
+      toast({ title: 'AI request failed', description: e.message, variant: 'destructive' });
+    } finally {
+      setAiBusy(null);
+    }
   };
 
   return (
@@ -87,13 +146,18 @@ export function PropertyForm({ onSubmit, initialData, isSubmitting, onCancel }: 
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleFormSubmit, handleInvalid)} className="space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
                 <TabsTrigger value="basic">Basic Information</TabsTrigger>
+                <TabsTrigger value="vastu">Vastu</TabsTrigger>
                 <TabsTrigger value="mls">MLS Integration</TabsTrigger>
                 <TabsTrigger value="seo">SEO & Advanced</TabsTrigger>
               </TabsList>
+
+              <TabsContent value="vastu" className="pt-4">
+                <VastuEditor vastu={vastu} facing={facing} onChange={setVastu} onFacingChange={setFacing} />
+              </TabsContent>
 
               <TabsContent value="mls" className="space-y-6 pt-4">
                 <FormField
@@ -234,10 +298,9 @@ export function PropertyForm({ onSubmit, initialData, isSubmitting, onCancel }: 
                               <SelectValue placeholder="Select type" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="house">House</SelectItem>
-                              <SelectItem value="condo">Condo</SelectItem>
-                              <SelectItem value="townhouse">Townhouse</SelectItem>
-                              <SelectItem value="land">Land</SelectItem>
+                              {(Object.keys(PROPERTY_TYPE_LABELS) as PropertyType[]).map((t) => (
+                                <SelectItem key={t} value={t}>{PROPERTY_TYPE_LABELS[t]}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </FormControl>
@@ -290,6 +353,93 @@ export function PropertyForm({ onSubmit, initialData, isSubmitting, onCancel }: 
 
                   <FormField
                     control={form.control}
+                    name="lot_size"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Lot Size (sq ft)</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="0" {...field} value={field.value ?? ''} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="year_built"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Year Built</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="1800" max="2100" {...field} value={field.value ?? ''} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="postal_code"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Postal Code</FormLabel>
+                        <FormControl>
+                          <Input placeholder="L6Y 1A1" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="transaction_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Listed For</FormLabel>
+                        <FormControl>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="sale">Sale</SelectItem>
+                              <SelectItem value="rent">Rent / Lease</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="market_status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Market Status</FormLabel>
+                        <FormControl>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="for-sale">Available</SelectItem>
+                              <SelectItem value="pending">Pending / Conditionally sold</SelectItem>
+                              <SelectItem value="sold">Sold / Leased</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
                     name="status"
                     render={({ field }) => (
                       <FormItem>
@@ -319,7 +469,13 @@ export function PropertyForm({ onSubmit, initialData, isSubmitting, onCancel }: 
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <div className="flex items-center justify-between gap-2">
+                        <FormLabel>Description</FormLabel>
+                        <Button type="button" variant="outline" size="sm" onClick={() => runAI('describe')} disabled={aiBusy !== null}>
+                          {aiBusy === 'describe' ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4 text-realtor-gold" />}
+                          Write with AI
+                        </Button>
+                      </div>
                       <FormControl>
                         <Textarea rows={4} placeholder="Detailed description of the property" {...field} />
                       </FormControl>
@@ -373,6 +529,13 @@ export function PropertyForm({ onSubmit, initialData, isSubmitting, onCancel }: 
               </TabsContent>
 
               <TabsContent value="seo" className="space-y-6 pt-4">
+                <div className="flex items-center justify-between gap-4 rounded-lg border border-dashed p-4">
+                  <p className="text-sm text-gray-600">Fill the SEO title, description and keywords from this listing (adds Vastu keywords when set).</p>
+                  <Button type="button" variant="outline" size="sm" onClick={() => runAI('seo')} disabled={aiBusy !== null}>
+                    {aiBusy === 'seo' ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4 text-realtor-gold" />}
+                    Generate SEO
+                  </Button>
+                </div>
                 <FormField
                   control={form.control}
                   name="virtual_tour_url"

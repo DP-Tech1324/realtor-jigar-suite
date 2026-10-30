@@ -85,7 +85,7 @@ const AiChatBubbleBase: React.FC<AiChatBubbleProps> = ({ context, className }) =
     setInput('');
     setLoading(true);
     try {
-      const reply = await chatWithAgent(trimmed, context);
+      const reply = await chatWithAgent(newMessages.filter((m) => m !== welcomeMsg));
       setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
     } catch (err) {
       console.error('AI error:', err);
