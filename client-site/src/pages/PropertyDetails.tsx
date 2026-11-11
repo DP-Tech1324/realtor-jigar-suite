@@ -29,6 +29,7 @@ import {
 import { useListing, listingImages } from "@/hooks/useListings";
 import { supabase } from "@/integrations/supabase/client";
 import VastuSection from "@/components/VastuSection";
+import { DdfDetailCredit, isDdf } from "@/components/DdfAttribution";
 import { parseVastu } from "@/lib/vastu";
 import { useIsFavorite, useToggleFavorite } from "@/hooks/useFavorites";
 import { useAuth } from "@/components/auth/AuthContext";
@@ -369,6 +370,8 @@ const PropertyDetails = () => {
                 </div>
               </div>
 
+              <DdfDetailCredit listing={listing} />
+
               {showVastu && (
                 <>
                   <Separator />
@@ -420,7 +423,7 @@ const PropertyDetails = () => {
                 <CardContent className="p-6 md:p-8">
                   <div className="flex justify-center mb-4">
     <span className="inline-block bg-blue-100 text-blue-700 text-xs font-semibold rounded-full px-4 py-1 shadow-sm border border-blue-200 uppercase tracking-wider">
-      Presented by Jigar Patel
+      {isDdf(listing) && !listing.is_own_listing ? 'Ask Jigar About This Home' : 'Presented by Jigar Patel'}
     </span>
   </div>
                   <div className="text-center mb-8">

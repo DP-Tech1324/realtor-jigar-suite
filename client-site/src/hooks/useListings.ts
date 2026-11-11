@@ -36,6 +36,11 @@ export interface Listing {
   facing?: Direction | null;
   vastu?: unknown;
   vastu_score?: number | null;
+  // CREA DDF® feed fields (source = 'ddf')
+  source?: 'manual' | 'ddf';
+  listing_url?: string | null;
+  list_office_name?: string | null;
+  is_own_listing?: boolean;
 }
 
 // Cover photo first, then the gallery, without duplicates

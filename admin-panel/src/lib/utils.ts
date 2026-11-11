@@ -62,6 +62,27 @@ export function transformPropertyFromDb(listing: any): Property {
     facing: listing.facing || null,
     vastu: parseVastu(listing.vastu),
     vastu_score: listing.vastu_score ?? null,
+    source: listing.source === 'ddf' ? 'ddf' : 'manual',
+    is_own_listing: !!listing.is_own_listing,
+    list_office_name: listing.list_office_name ?? null,
+    listing_url: listing.listing_url ?? null,
+  };
+}
+
+// Columns Jigar may change on an MLS® feed listing; the daily sync owns everything else
+export function transformDdfEditsToDb(form: Partial<Property>) {
+  const vastu = form.vastu ?? null;
+  const facing = (form.facing || null) as Direction | null;
+  const { score } = vastu?.enabled ? evaluateVastu(vastu, facing) : { score: null };
+  return {
+    facing,
+    vastu,
+    vastu_score: score,
+    is_featured: !!form.featured,
+    virtual_tour_url: form.virtual_tour_url || null,
+    seo_title: form.seo_title || null,
+    seo_description: form.seo_description || null,
+    meta_keywords: form.meta_keywords || null,
   };
 }
 
