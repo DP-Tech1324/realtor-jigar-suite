@@ -36,6 +36,11 @@ export interface Property {
   facing?: Direction | null;
   vastu?: VastuData | null;
   vastu_score?: number | null;
+  // CREA DDF® feed listings: feed fields are read-only in the admin panel
+  source: 'manual' | 'ddf';
+  is_own_listing?: boolean;
+  list_office_name?: string | null;
+  listing_url?: string | null;
 }
 
 export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {

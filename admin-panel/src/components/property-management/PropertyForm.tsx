@@ -63,10 +63,12 @@ export function PropertyForm({ onSubmit, initialData, isSubmitting, onCancel }: 
   const [facing, setFacing] = useState<Direction | null>(initialData?.facing ?? null);
   const [aiBusy, setAiBusy] = useState<'describe' | 'seo' | null>(null);
   const { toast } = useToast();
+  const isDdf = initialData?.source === 'ddf';
 
   // Initialize form with react-hook-form and zod validation
   const form = useForm<PropertyFormValues>({
-    resolver: zodResolver(propertySchema),
+    // MLS® listings only change Vastu/featured/SEO, so the feed's own data isn't re-validated
+    resolver: zodResolver(isDdf ? z.object({}).passthrough() : propertySchema),
     defaultValues: {
       title: initialData?.title || '',
       price: initialData?.price || 0,
@@ -143,6 +145,12 @@ export function PropertyForm({ onSubmit, initialData, isSubmitting, onCancel }: 
       <CardHeader>
         <CardTitle>{initialData ? 'Edit Property' : 'Add New Property'}</CardTitle>
         <CardDescription>Fill out the form to {initialData ? 'update' : 'create'} a property listing.</CardDescription>
+        {isDdf && (
+          <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+            This is an MLS® listing from the CREA feed. Price, address, photos and description update automatically every day
+            and can only be changed on the MLS®. You can add Vastu details, feature it, and edit the SEO fields.
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -196,6 +204,7 @@ export function PropertyForm({ onSubmit, initialData, isSubmitting, onCancel }: 
               </TabsContent>
               
               <TabsContent value="basic" className="space-y-6 pt-4">
+                <fieldset disabled={isDdf} className="space-y-6 disabled:opacity-60">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -505,6 +514,8 @@ export function PropertyForm({ onSubmit, initialData, isSubmitting, onCancel }: 
                     />
                   </div>
                 </div>
+
+                </fieldset>
 
                 <FormField
                   control={form.control}

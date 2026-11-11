@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Heart, Bed, Bath, Square, MapPin, Camera, Eye, Compass } from 'lucide-react';
 import { Listing, listingImages } from '@/hooks/useListings';
 import { parseVastu } from '@/lib/vastu';
+import { DdfCardCredit } from '@/components/DdfAttribution';
 import { useIsFavorite, useToggleFavorite } from '@/hooks/useFavorites';
 import { useAuth } from '@/components/auth/AuthContext';
 
@@ -62,6 +63,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ listing, onViewDetails }) =
         {/* Top badges and actions */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
           <div className="flex flex-col items-start gap-2">
+            {listing.is_own_listing && (
+              <Badge className="bg-slate-900 text-white font-bold px-3 py-1 shadow-lg w-fit">
+                Jigar's Listing
+              </Badge>
+            )}
             <Badge className="bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium px-3 py-1 shadow-lg">
               {listing.property_type.replace('_', ' ').toUpperCase()}
             </Badge>
@@ -141,6 +147,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ listing, onViewDetails }) =
             <MapPin className="h-4 w-4 mr-2 text-blue-600" />
             <span className="text-sm">{listing.address}, {listing.city}</span>
           </div>
+          <DdfCardCredit listing={listing} />
         </div>
         
         {/* Property features */}

@@ -82,6 +82,7 @@ export default function ListingsPage() {
         .from("listings")
         .select("*")
         .neq("status", "draft")
+        .order("is_own_listing", { ascending: false })
         .order("status", { ascending: true })
         .order("created_at", { ascending: false });
       query = applyDbFilters(query, filters);

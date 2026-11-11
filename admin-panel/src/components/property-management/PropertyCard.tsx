@@ -74,6 +74,11 @@ export function PropertyCard({ property, onEdit, onDelete, onToggleStatus }: Pro
               Featured
             </Badge>
           )}
+          {property.source === 'ddf' && (
+            <Badge className="bg-blue-100 text-blue-800">
+              MLS®
+            </Badge>
+          )}
           {property.vastu?.enabled && property.vastu_score != null && (
             <Badge className="bg-green-100 text-green-800">
               Vastu {property.vastu_score}/10
@@ -132,23 +137,28 @@ export function PropertyCard({ property, onEdit, onDelete, onToggleStatus }: Pro
               Edit
             </Button>
             
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onToggleStatus(property.id, property.status)}
-              className="flex-1"
-            >
-              <Eye className="h-4 w-4 mr-1" />
-              {property.status === 'published' ? 'Unpublish' : 'Publish'}
-            </Button>
-            
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={handleDelete}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {/* MLS® listings come and go with the daily sync, so they can't be unpublished or deleted here */}
+            {property.source !== 'ddf' && (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onToggleStatus(property.id, property.status)}
+                  className="flex-1"
+                >
+                  <Eye className="h-4 w-4 mr-1" />
+                  {property.status === 'published' ? 'Unpublish' : 'Publish'}
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={handleDelete}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </CardContent>

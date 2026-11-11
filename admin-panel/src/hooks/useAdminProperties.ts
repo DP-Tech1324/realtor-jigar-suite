@@ -3,21 +3,24 @@ import { useState, useEffect } from 'react';
 import { Property } from '@/types/Property';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
-import { transformPropertyFromDb, transformPropertyToDb } from '@/lib/utils';
+import { transformPropertyFromDb, transformPropertyToDb, transformDdfEditsToDb } from '@/lib/utils';
 
 export function useAdminProperties() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const [reloadKey, setReloadKey] = useState(0);
 
   // Fetch properties from Supabase
   useEffect(() => {
     const fetchProperties = async () => {
       setLoading(true);
+      // Jigar's own listings only: manual ones plus his MLS® feed listings
       const { data, error } = await supabase
         .from('listings')
         .select('*')
+        .or('source.eq.manual,is_own_listing.eq.true')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -28,7 +31,7 @@ export function useAdminProperties() {
       setLoading(false);
     };
     fetchProperties();
-  }, [toast]);
+  }, [toast, reloadKey]);
 
   // Add or Edit property handler
   const handleSubmit = async (formData: any, coverImage?: File, additionalImages?: string[]) => {
@@ -71,6 +74,16 @@ export function useAdminProperties() {
   const handleUpdate = async (editingProperty: Property, formData: any, coverImage?: File, additionalImages?: string[]) => {
     setIsSubmitting(true);
     try {
+      if (editingProperty.source === 'ddf') {
+        const { error, data } = await supabase.from('listings')
+          .update(transformDdfEditsToDb(formData))
+          .eq('id', editingProperty.id).select();
+        if (error) throw error;
+        setProperties((prev) => prev.map((p) => (p.id === editingProperty.id ? transformPropertyFromDb(data[0]) : p)));
+        toast({ title: "Property updated" });
+        return true;
+      }
+
       const images: string[] = additionalImages || [];
       let coverImageUrl = editingProperty.cover_image || '';
 
@@ -141,6 +154,7 @@ export function useAdminProperties() {
     handleSubmit,
     handleUpdate,
     handleDelete,
-    handleToggleStatus
+    handleToggleStatus,
+    reload: () => setReloadKey((k) => k + 1),
   };
 }

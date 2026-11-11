@@ -46,6 +46,26 @@ except `/api/*` to the React app, so the AI functions keep working.
 
 Local development: `npm install && npm run dev` in each folder. The `/api` functions need `vercel dev` to run locally.
 
+## MLS® listings (CREA DDF®)
+
+`admin-panel/api/ddf-sync.js` copies MLS® listings into `listings` (`source = 'ddf'`) every night at 09:00 UTC
+(Vercel cron in `admin-panel/vercel.json`), and on demand from **Admin → Properties → MLS® Feed → Sync now**.
+
+1. Run `supabase/migrations/20261111000000_ddf_listings.sql` (adds the feed columns and the sync functions).
+2. In the **admin** Vercel project set: `DDF_CLIENT_ID`, `DDF_CLIENT_SECRET` (from CREA's DDF® portal),
+   `SUPABASE_SERVICE_ROLE_KEY` (Supabase → API settings, keep secret), `CRON_SECRET` (any long random string),
+   and optionally `DDF_CITIES` and `DDF_MAX_LISTINGS`.
+3. Deploy, then Admin → Properties → MLS® Feed → "Find Jigar's agent key". Put the key in `DDF_AGENT_KEYS`,
+   redeploy, and press **Sync now**.
+
+What gets synced: all of Jigar's own listings, plus the newest `DDF_MAX_LISTINGS` listings in `DDF_CITIES`.
+Listings that leave the feed are deleted on the next sync (CREA requirement). A failed fetch never deletes anything.
+
+- Jigar's own listings: shown first with a "Jigar's Listing" badge, featured by default, and editable in the admin
+  panel for Vastu, featured and SEO only. The sync never overwrites those edits.
+- Other brokerages' listings: website only, with the listing brokerage, MLS® number, a "View on REALTOR.ca" link and
+  CREA's trademark notice (`client-site/src/components/DdfAttribution.tsx`).
+
 ## How Vastu works
 
 - In the admin panel, open a property → **Vastu** tab. Turn on "Show Vastu details", set the facing and the room in each

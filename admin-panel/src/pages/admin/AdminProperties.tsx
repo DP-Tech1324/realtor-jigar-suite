@@ -8,6 +8,8 @@ import { PropertyStats } from '@/components/property-management/PropertyStats';
 import { PropertyFormModal } from '@/components/property-management/PropertyFormModal';
 import { Property } from '@/types/Property';
 import { useAdminProperties } from '@/hooks/useAdminProperties';
+import { MlsFeedPanel } from '@/components/property-management/MlsFeedPanel';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AdminProperties = () => {
   const [modalOpen, setModalOpen] = useState(false);
@@ -20,8 +22,10 @@ const AdminProperties = () => {
     handleSubmit,
     handleUpdate,
     handleDelete,
-    handleToggleStatus
+    handleToggleStatus,
+    reload,
   } = useAdminProperties();
+  const { userRole } = useAuth();
 
   // Handle form submission for both create and update
   const handleFormSubmit = async (formData: any, coverImage?: File, additionalImages?: string[]) => {
@@ -79,6 +83,8 @@ const AdminProperties = () => {
         draft={draft}
         featured={featured}
       />
+
+      {(userRole === 'admin' || userRole === 'superadmin') && <MlsFeedPanel onSynced={reload} />}
 
       <Card>
         <CardHeader>

@@ -1,5 +1,11 @@
 {
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/" }
+  ],
+  "functions": {
+    "api/ddf-sync.js": { "maxDuration": 300 }
+  },
+  "crons": [
+    { "path": "/api/ddf-sync", "schedule": "0 9 * * *" }
   ]
 }
