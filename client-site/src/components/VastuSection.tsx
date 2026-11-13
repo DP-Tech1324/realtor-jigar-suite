@@ -16,6 +16,8 @@ interface VastuSectionProps {
   vastu: unknown;
   facing?: Direction | null;
   onAsk?: () => void;
+  // Set for an AI estimate read from the listing's floor plan (not verified by Jigar)
+  estimate?: { confidence?: string | null; notes?: string | null };
 }
 
 const VERDICT_UI: Record<Verdict, { label: string; pill: string; cell: string; Icon: typeof CheckCircle }> = {
@@ -25,7 +27,7 @@ const VERDICT_UI: Record<Verdict, { label: string; pill: string; cell: string; I
 };
 
 // Shown on the property page when the listing has Vastu details turned on in the admin panel
-const VastuSection: React.FC<VastuSectionProps> = ({ vastu: raw, facing, onAsk }) => {
+const VastuSection: React.FC<VastuSectionProps> = ({ vastu: raw, facing, onAsk, estimate }) => {
   const vastu = parseVastu(raw);
   if (!vastu?.enabled) return null;
 
@@ -43,9 +45,20 @@ const VastuSection: React.FC<VastuSectionProps> = ({ vastu: raw, facing, onAsk }
     <section id="vastu" className="animate-fade-in scroll-mt-24">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">Vastu Details</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2 flex flex-wrap items-center gap-3">
+            Vastu Details
+            {estimate ? (
+              <span className="text-sm font-semibold rounded-full bg-amber-100 text-amber-900 px-3 py-1">
+                AI estimate{estimate.confidence ? ` · ${estimate.confidence} confidence` : ''} · confirm with Jigar
+              </span>
+            ) : (
+              <span className="text-sm font-semibold rounded-full bg-green-100 text-green-800 px-3 py-1">Verified by Jigar</span>
+            )}
+          </h2>
           <p className="text-slate-600 max-w-xl">
-            Where each room sits by direction, so you can check this home against Vastu Shastra before you visit.
+            {estimate
+              ? 'Read by AI from this listing\'s floor plan photo. Room placement and facing may be off; Jigar can confirm before you visit.'
+              : 'Where each room sits by direction, so you can check this home against Vastu Shastra before you visit.'}
           </p>
         </div>
         <div className="flex items-center gap-4 rounded-2xl border border-green-200 bg-green-50 px-5 py-3 shrink-0">
@@ -110,18 +123,20 @@ const VastuSection: React.FC<VastuSectionProps> = ({ vastu: raw, facing, onAsk }
               );
             })}
           </ul>
-          {vastu.notes && <p className="mt-4 text-slate-700">{vastu.notes}</p>}
+          {(estimate?.notes || vastu.notes) && <p className="mt-4 text-slate-700">{estimate?.notes || vastu.notes}</p>}
         </div>
       </div>
 
       <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl bg-slate-50 p-5">
         <p className="text-sm text-slate-600 max-w-2xl">
-          Vastu details are provided by the listing agent from the floor plan, for information only. Please consult a Vastu expert
+          {estimate
+            ? 'This is an automated estimate from listing photos, not a professional Vastu assessment. Please consult a Vastu expert'
+            : 'Vastu details are provided by the listing agent from the floor plan, for information only. Please consult a Vastu expert'}
           {facing ? ` (main entrance: ${DIRECTION_LABELS[facing]} facing)` : ''} before making a decision.
         </p>
         {onAsk && (
           <Button onClick={onAsk} className="bg-blue-600 hover:bg-blue-700 shrink-0">
-            <MessageCircle className="h-4 w-4 mr-2" /> Ask about Vastu
+            <MessageCircle className="h-4 w-4 mr-2" /> {estimate ? 'Request full Vastu report' : 'Ask about Vastu'}
           </Button>
         )}
       </div>

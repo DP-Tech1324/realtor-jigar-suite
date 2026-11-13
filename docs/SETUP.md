@@ -88,6 +88,18 @@ notice (`client-site/src/components/DdfAttribution.tsx`).
 - On the website, the listing gets a Vastu badge, a Vastu section on its page, and appears in the
   "Facing" and "Vastu-friendly homes only (score 7+)" search filters.
 
+## Vastu for MLS® listings (AI estimate)
+
+CREA's feed has no room layout, so MLS® listings get Vastu on demand:
+- Listings where Jigar entered Vastu details show them, marked "Verified by Jigar".
+- Every other Ontario MLS® listing shows **Check Vastu (AI)**: `client-site/api/vastu-check.js` downloads the listing
+  photos, Claude finds the floor plan and fills the 9 zones and facing, and the page shows the grid, score and
+  checklist marked "AI estimate · confirm with Jigar". Results are saved in `listing_vastu_ai` (one per listing).
+- No usable floor plan, or a listing outside Ontario: **Request a Vastu report from Jigar** sends him an inquiry.
+- Cost control: `VASTU_DAILY_LIMIT` new analyses per day (default 150) and 6 per visitor per hour. Website project
+  needs `ANTHROPIC_API_KEY` and `SERVICE_ROLE_KEY`.
+- The Vastu search filter only uses verified scores.
+
 ## AI features (Claude)
 
 | Where | Feature |

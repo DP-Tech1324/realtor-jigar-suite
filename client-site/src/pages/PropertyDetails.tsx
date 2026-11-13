@@ -29,6 +29,7 @@ import {
 import { useListing, listingImages, isLiveListingId } from "@/hooks/useListings";
 import { supabase } from "@/integrations/supabase/client";
 import VastuSection from "@/components/VastuSection";
+import VastuCheck from "@/components/VastuCheck";
 import { DdfDetailCredit, isDdf } from "@/components/DdfAttribution";
 import { parseVastu } from "@/lib/vastu";
 import { useIsFavorite, useToggleFavorite } from "@/hooks/useFavorites";
@@ -382,17 +383,24 @@ const PropertyDetails = () => {
                 </div>
               )}
 
-              {showVastu && (
-                <>
-                  <Separator />
-                  <VastuSection
-                    vastu={listing.vastu}
-                    facing={listing.facing}
-                    onAsk={() => openContact(`Hi Jigar, I have a Vastu question about "${listing.title}": `)}
-                  />
-                  <Separator />
-                </>
+              <Separator />
+              {showVastu ? (
+                <VastuSection
+                  vastu={listing.vastu}
+                  facing={listing.facing}
+                  onAsk={() => openContact(`Hi Jigar, I have a Vastu question about "${listing.title}": `)}
+                />
+              ) : (
+                // MLS® listings without Jigar's details: AI estimate from the floor plan, or a report request
+                <VastuCheck
+                  listingId={listing.id}
+                  live={listing.live}
+                  onRequest={() => openContact(
+                    `Hi Jigar, please prepare a Vastu report for "${listing.title}"${listing.mls_number ? ` (MLS® ${listing.mls_number})` : ''}, ${listing.address}, ${listing.city}.`,
+                  )}
+                />
               )}
+              <Separator />
 
               {/* Market Insights */}
               <div className="animate-fade-in">
