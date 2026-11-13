@@ -29,7 +29,7 @@ export const useAdminData = () => {
       setLoading(true);
       
       const [properties, users, inquiries, analytics] = await Promise.all([
-        supabase.from('listings').select('id, status', { count: 'exact' }),
+        supabase.from('listings').select('id, status', { count: 'exact' }).or('source.eq.manual,is_own_listing.eq.true'),
         supabase.from('admin_users').select('id', { count: 'exact' }),
         supabase.from('inquiries').select('id, status', { count: 'exact' }),
         supabase

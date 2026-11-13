@@ -41,6 +41,19 @@ export interface Listing {
   listing_url?: string | null;
   list_office_name?: string | null;
   is_own_listing?: boolean;
+  // Fetched live from CREA (outside Ontario), not stored in Supabase; id is "ddf-<ListingKey>"
+  live?: boolean;
+}
+
+export const isLiveListingId = (id: string) => id.startsWith('ddf-');
+
+// Live CREA search for areas outside Ontario (client-site/api/ddf-search.js)
+export async function searchLiveListings(params: Record<string, string>): Promise<{ listings: Listing[]; hasMore: boolean }> {
+  const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v !== undefined)).toString();
+  const res = await fetch(`/api/ddf-search?${qs}`);
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body.error || 'Live MLS® search failed');
+  return body;
 }
 
 // Cover photo first, then the gallery, without duplicates
@@ -115,6 +128,13 @@ export const useListing = (id: string) => {
   return useQuery({
     queryKey: ['listing', id],
     queryFn: async () => {
+      if (isLiveListingId(id)) {
+        const res = await fetch(`/api/ddf-search?key=${encodeURIComponent(id.slice(4))}`);
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body.error || 'Listing not found');
+        return body.listing as Listing;
+      }
+
       const { data, error } = await supabase
         .from('listings')
         .select('*')

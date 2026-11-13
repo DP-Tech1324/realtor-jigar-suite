@@ -46,25 +46,38 @@ except `/api/*` to the React app, so the AI functions keep working.
 
 Local development: `npm install && npm run dev` in each folder. The `/api` functions need `vercel dev` to run locally.
 
-## MLS® listings (CREA DDF®)
+## MLS® listings (CREA DDF®): Ontario stored, rest of Canada live
 
-`admin-panel/api/ddf-sync.js` copies MLS® listings into `listings` (`source = 'ddf'`) every night at 09:00 UTC
-(Vercel cron in `admin-panel/vercel.json`), and on demand from **Admin → Properties → MLS® Feed → Sync now**.
+```
+CREA DDF®  →  admin-panel/api/ddf-sync.js  →  Supabase listings (all of Ontario + Jigar's own)  →  website
+CREA DDF®  →  client-site/api/ddf-search.js (live, cached 5 min)  →  website search outside Ontario
+```
 
-1. Run `supabase/migrations/20261111000000_ddf_listings.sql` (adds the feed columns and the sync functions).
-2. In the **admin** Vercel project set: `DDF_CLIENT_ID`, `DDF_CLIENT_SECRET` (from CREA's DDF® portal),
-   `SUPABASE_SERVICE_ROLE_KEY` (Supabase → API settings, keep secret), `CRON_SECRET` (any long random string),
-   and optionally `DDF_CITIES` and `DDF_MAX_LISTINGS`.
-3. Deploy, then Admin → Properties → MLS® Feed → "Find Jigar's agent key". Put the key in `DDF_AGENT_KEYS`,
-   redeploy, and press **Sync now**.
+**Ontario (stored).** `ddf-sync` runs twice a day (Vercel cron, `admin-panel/vercel.json`) and from
+**Admin → Properties → MLS® Feed → Sync now**. Each run works up to ~4 minutes and continues where it stopped:
+1. Jigar's own listings (`DDF_AGENT_KEYS`, any province) are refreshed.
+2. Ontario listings changed since the newest one stored are upserted, oldest first. The first runs load all of
+   Ontario (about 50–60k listings); "Sync now" keeps going until it's done.
+3. Once a day, a pass over all Ontario listing keys (resumable across runs) marks what's still in the feed; when it
+   completes, listings it didn't see (sold, expired, withdrawn) are deleted.
 
-What gets synced: all of Jigar's own listings, plus the newest `DDF_MAX_LISTINGS` listings in `DDF_CITIES`.
-Listings that leave the feed are deleted on the next sync (CREA requirement). A failed fetch never deletes anything.
+Upserts never overwrite what Jigar edits in the admin panel (facing, Vastu, featured, SEO). Up to 15 photos are
+stored per listing so Ontario fits in the free Supabase plan (500 MB). Check Supabase → Usage after the first load.
 
-- Jigar's own listings: shown first with a "Jigar's Listing" badge, featured by default, and editable in the admin
-  panel for Vastu, featured and SEO only. The sync never overwrites those edits.
-- Other brokerages' listings: website only, with the listing brokerage, MLS® number, a "View on REALTOR.ca" link and
-  CREA's trademark notice (`client-site/src/components/DdfAttribution.tsx`).
+**Rest of Canada (live).** Choosing another province in the search bar, or searching a city that isn't stored
+(e.g. "Calgary"), queries CREA live. These listings aren't saved; their pages load live too, and inquiries
+from them reach Jigar with the MLS® number in the message, for a referral to a local REALTOR®.
+
+**Setup**
+1. Run the migrations `20261111000000_ddf_listings.sql` and `20261113000000_ddf_ontario_sync.sql`.
+2. Admin Vercel project: `DDF_CLIENT_ID`, `DDF_CLIENT_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`
+   (optional `DDF_PROVINCE`, default `Ontario`).
+3. Website Vercel project: `DDF_CLIENT_ID`, `DDF_CLIENT_SECRET` (for live search).
+4. Deploy, then Admin → Properties → MLS® Feed → "Find Jigar's agent key" → set `DDF_AGENT_KEYS` → redeploy →
+   **Sync now** (let it run until it says the sync is complete).
+
+Every MLS® listing shows the listing brokerage, MLS® number, a "View on REALTOR.ca" link and CREA's trademark
+notice (`client-site/src/components/DdfAttribution.tsx`).
 
 ## How Vastu works
 

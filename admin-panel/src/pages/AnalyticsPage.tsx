@@ -62,7 +62,7 @@ const AnalyticsPage = () => {
       since6m.setHours(0, 0, 0, 0);
 
       const [listings, views, inquiries, consultations] = await Promise.all([
-        supabase.from('listings').select('id, title, property_type, status, city'),
+        supabase.from('listings').select('id, title, property_type, status, city').or('source.eq.manual,is_own_listing.eq.true'),
         supabase.from('listing_views').select('listing_id, viewed_at').gte('viewed_at', since30.toISOString()).limit(50000),
         supabase.from('inquiries').select('created_at').gte('created_at', since6m.toISOString()),
         supabase.from('consultations').select('created_at').gte('created_at', since6m.toISOString()),
@@ -117,8 +117,13 @@ const AnalyticsPage = () => {
       })));
       setCityDistributionData(topSlices(countBy(listingRows, (l) => (l.city || 'Unknown').trim())));
 
-      const titles = new Map(listingRows.map((l) => [l.id, l.title]));
-      setTopListings(countBy(viewRows, (v) => v.listing_id).slice(0, 8).map((s) => ({ title: titles.get(s.name) || 'Deleted listing', views: s.value })));
+      // Most viewed can include other brokerages' MLS® listings, so look their titles up directly
+      const top = countBy(viewRows, (v) => v.listing_id).slice(0, 8);
+      const { data: topRows } = top.length
+        ? await supabase.from('listings').select('id, title').in('id', top.map((s) => s.name))
+        : { data: [] };
+      const titles = new Map((topRows || []).map((l) => [l.id, l.title]));
+      setTopListings(top.map((s) => ({ title: titles.get(s.name) || 'Removed listing', views: s.value })));
 
       setLoading(false);
     };
@@ -151,7 +156,7 @@ const AnalyticsPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{totalProperties}</div>
-            <p className="text-sm text-muted-foreground">Including drafts</p>
+            <p className="text-sm text-muted-foreground">Jigar's listings, including drafts</p>
           </CardContent>
         </Card>
         

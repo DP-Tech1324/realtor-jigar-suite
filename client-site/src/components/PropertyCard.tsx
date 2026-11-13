@@ -98,7 +98,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ listing, onViewDetails }) =
                 {imageCount}
               </div>
             )}
-            {user && (
+            {user && !listing.live && (
               <Button
                 variant="outline"
                 size="sm"

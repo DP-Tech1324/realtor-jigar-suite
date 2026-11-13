@@ -46,7 +46,7 @@ const ImageManagement = () => {
     setLoading(true);
     const [files, listings] = await Promise.all([
       supabase.storage.from(BUCKET).list(FOLDER, { limit: 1000, sortBy: { column: 'created_at', order: 'desc' } }),
-      supabase.from('listings').select('title, images, cover_image'),
+      supabase.from('listings').select('title, images, cover_image').or('source.eq.manual,is_own_listing.eq.true'),
     ]);
     if (files.error) {
       toast({ title: 'Error loading images', description: files.error.message, variant: 'destructive' });

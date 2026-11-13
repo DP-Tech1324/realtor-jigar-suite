@@ -5,6 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import AiChatBubble from "@/components/AiChatBubble";
 import PropertyCard from "@/components/PropertyCard";
+import { searchLiveListings } from "@/hooks/useListings";
+import { PROVINCE_LABELS } from "@/components/PropertySearch";
+
+const PAGE_SIZE = 24;
 
 // Helper: parse URL params into filter fields matching your DB
 function parseFilters(search: string) {
@@ -23,12 +27,14 @@ function parseFilters(search: string) {
     postal_code: params.get("postal_code") || "",
     facing: params.get("facing") || "",
     vastu: params.get("vastu") || "",
+    province: params.get("province") || "", // "" or "ON" = stored Ontario listings; others = live CREA search
   };
 }
 
 // Map search field names to DB columns
 function applyDbFilters(query: any, filters: any) {
   if (filters.city) query = query.ilike("city", `%${filters.city}%`);
+  if (filters.province === "ON") query = query.eq("province", "ON");
   if (filters.propertyType) query = query.eq("property_type", filters.propertyType);
 
   // Price filter: min/max (always works, if filled)
@@ -69,35 +75,93 @@ export default function ListingsPage() {
   const navigate = useNavigate();
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  // "stored" = Supabase (Ontario + manual listings); "live" = CREA search for the rest of Canada
+  const [mode, setMode] = useState<"stored" | "live">("stored");
+
+  const fetchPage = async (pageNumber: number) => {
+    const filters = parseFilters(location.search);
+    const liveParams = {
+      city: filters.city,
+      province: filters.province,
+      minPrice: filters.minPrice,
+      maxPrice: filters.maxPrice,
+      bedrooms: filters.bedrooms,
+      bathrooms: filters.bathrooms,
+      saleType: filters.saleType,
+      propertyType: filters.propertyType,
+      page: String(pageNumber),
+    };
+
+    if (filters.province && filters.province !== "ON") {
+      const live = await searchLiveListings(liveParams);
+      return { rows: live.listings, more: live.hasMore, mode: "live" as const };
+    }
+
+    // Drafts are hidden by RLS; Jigar's listings first, then available before pending/sold
+    let query = supabase
+      .from("listings")
+      .select("*")
+      .neq("status", "draft")
+      .order("is_own_listing", { ascending: false })
+      .order("status", { ascending: true })
+      .order("created_at", { ascending: false })
+      .range(pageNumber * PAGE_SIZE, pageNumber * PAGE_SIZE + PAGE_SIZE - 1);
+    query = applyDbFilters(query, filters);
+    const { data, error } = await query;
+    if (error) throw new Error(error.message);
+
+    // A city we don't store (e.g. Calgary): search CREA live across Canada
+    if (pageNumber === 0 && (data || []).length === 0 && filters.city && !filters.province) {
+      const live = await searchLiveListings(liveParams);
+      return { rows: live.listings, more: live.hasMore, mode: "live" as const };
+    }
+    return { rows: data || [], more: (data || []).length === PAGE_SIZE, mode: "stored" as const };
+  };
 
   useEffect(() => {
-    async function fetchProperties() {
-      setLoading(true);
-      setError(null);
-      const filters = parseFilters(location.search);
-
-      // Drafts are hidden by RLS; sold/pending homes show after available ones
-      let query = supabase
-        .from("listings")
-        .select("*")
-        .neq("status", "draft")
-        .order("is_own_listing", { ascending: false })
-        .order("status", { ascending: true })
-        .order("created_at", { ascending: false });
-      query = applyDbFilters(query, filters);
-
-      const { data, error } = await query;
-      if (error) {
-        setError(error.message);
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    setPage(0);
+    fetchPage(0)
+      .then((r) => {
+        if (cancelled) return;
+        setResults(r.rows);
+        setHasMore(r.more);
+        setMode(r.mode);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setError(e.message);
         setResults([]);
-      } else {
-        setResults(data || []);
-      }
-      setLoading(false);
-    }
-    fetchProperties();
+        setHasMore(false);
+      })
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
   }, [location.search]);
+
+  const loadMore = async () => {
+    setLoadingMore(true);
+    try {
+      const r = await fetchPage(page + 1);
+      setResults((prev) => [...prev, ...r.rows]);
+      setHasMore(r.more);
+      setPage(page + 1);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const filters = parseFilters(location.search);
+  const where = filters.city || PROVINCE_LABELS[filters.province] || "";
 
   return (
     <div className="container mx-auto py-10">
@@ -119,7 +183,11 @@ export default function ListingsPage() {
 
       {!loading && results.length > 0 && (
         <>
-          <div className="text-sm text-slate-600 mt-8">{results.length} {results.length === 1 ? "home" : "homes"} found</div>
+          <div className="text-sm text-slate-600 mt-8">
+            {mode === "live"
+              ? `Showing live MLS® listings${where ? ` in ${where}` : ""}. Outside Ontario, Jigar connects you with a trusted local REALTOR®.`
+              : `${results.length}${hasMore ? "+" : ""} ${results.length === 1 ? "home" : "homes"} found`}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
             {results.map((listing) => (
               <PropertyCard
@@ -129,6 +197,13 @@ export default function ListingsPage() {
               />
             ))}
           </div>
+          {hasMore && (
+            <div className="flex justify-center mt-8">
+              <Button variant="outline" onClick={loadMore} disabled={loadingMore}>
+                {loadingMore ? "Loading..." : "Load more homes"}
+              </Button>
+            </div>
+          )}
         </>
       )}
       {!loading && results.length === 0 && !error && (
