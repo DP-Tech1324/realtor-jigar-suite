@@ -53,7 +53,7 @@ CREA DDF®  →  admin-panel/api/ddf-sync.js  →  Supabase listings (all of Ont
 CREA DDF®  →  client-site/api/ddf-search.js (live, cached 5 min)  →  website search outside Ontario
 ```
 
-**Ontario (stored).** `ddf-sync` runs twice a day (Vercel cron, `admin-panel/vercel.json`) and from
+**Ontario (stored).** `ddf-sync` runs five times a day (08:00 and 20:00–23:00 UTC, Vercel cron, `admin-panel/vercel.json`; Hobby runs each within its hour) and from
 **Admin → Properties → MLS® Feed → Sync now**. Each run works up to ~4 minutes and continues where it stopped:
 1. Jigar's own listings (`DDF_AGENT_KEYS`, any province) are refreshed.
 2. Ontario listings changed since the newest one stored are upserted, oldest first. The first runs load all of
