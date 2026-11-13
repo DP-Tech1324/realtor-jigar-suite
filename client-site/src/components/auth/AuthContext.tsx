@@ -42,21 +42,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
 
       if (session?.user) {
-        // Check if user is admin
-        try {
-          // Same role source as the admin panel (admin_users via security-definer RPC)
-          const { data: role } = await supabase.rpc('get_current_user_role');
-          setIsAdmin(['superadmin', 'admin', 'editor'].includes(role as string));
-        } catch (error) {
-          console.error('Error checking admin role:', error);
-          setIsAdmin(false);
-        }
+        // Never await a Supabase call inside this callback: supabase-js holds every other
+        // request until the callback returns, so signed-in visitors saw no listings at all.
+        setTimeout(async () => {
+          try {
+            // Same role source as the admin panel (admin_users via security-definer RPC)
+            const { data: role } = await supabase.rpc('get_current_user_role');
+            setIsAdmin(['superadmin', 'admin', 'editor'].includes(role as string));
+          } catch (error) {
+            console.error('Error checking admin role:', error);
+            setIsAdmin(false);
+          }
+        }, 0);
       } else {
         setIsAdmin(false);
       }
