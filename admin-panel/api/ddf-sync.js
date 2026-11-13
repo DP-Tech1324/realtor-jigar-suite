@@ -13,14 +13,14 @@
 // Listings outside Ontario are not stored; client-site/api/ddf-search.js searches them live.
 //
 // Env: DDF_CLIENT_ID, DDF_CLIENT_SECRET, DDF_AGENT_KEYS (comma separated), DDF_PROVINCE (default Ontario),
-//      CRON_SECRET, SUPABASE_SERVICE_ROLE_KEY, VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+//      CRON_SECRET, SERVICE_ROLE_KEY (or SUPABASE_SERVICE_ROLE_KEY), VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
 
 import { createClient } from '@supabase/supabase-js';
 import { DDF_API, PROVINCES, ddfGet, getToken, lookupOffices, odataString, propertyUrl, toRow } from './_lib/ddf.js';
 
 const STAFF_ROLES = ['superadmin', 'admin', 'editor'];
 // Either name works; the Vercel project uses SERVICE_ROLE_KEY
-const SERVICE_ROLE_KEY = SERVICE_ROLE_KEY || process.env.SERVICE_ROLE_KEY;
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SERVICE_ROLE_KEY;
 const TIME_BUDGET_MS = 240_000; // stay well inside the 300 s function limit
 const RECONCILE_EVERY_MS = 20 * 60 * 60 * 1000;
 
