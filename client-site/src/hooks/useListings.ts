@@ -74,7 +74,7 @@ export const useListings = (filters?: SearchFilters) => {
     queryKey: ['listings', filters],
     queryFn: async () => {
       let query = supabase
-        .from('listings')
+        .from('listings_public')
         .select('*')
         .eq('status', 'active')
         .order('created_at', { ascending: false });
@@ -111,7 +111,7 @@ export const useFeaturedListings = () => {
     queryKey: ['featured-listings'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('listings')
+        .from('listings_public')
         .select('*')
         .eq('status', 'active')
         .eq('is_featured', true)
