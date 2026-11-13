@@ -108,6 +108,9 @@ export function toRow(item, { ownKeys = [], offices = new Map() } = {}) {
 
   const property_type = mapPropertyType(item);
   const isRent = !item.ListPrice && !!item.LeaseAmount;
+  // Commercial leases are often priced per square foot or per year; only show a monthly figure
+  const leaseIsMonthly = !item.LeaseAmountFrequency || /month/i.test(item.LeaseAmountFrequency);
+  const rent = isRent && leaseIsMonthly && item.LeaseAmount >= 100 ? item.LeaseAmount : null;
   const beds = item.BedroomsTotal;
   const photos = (item.Media || [])
     .slice()
@@ -129,7 +132,7 @@ export function toRow(item, { ownKeys = [], offices = new Map() } = {}) {
     city,
     province: PROVINCES[item.StateOrProvince] || item.StateOrProvince || null,
     postal_code: item.PostalCode || null,
-    price: isRent ? item.LeaseAmount : (item.ListPrice || null),
+    price: isRent ? rent : (item.ListPrice || null),
     property_type,
     transaction_type: isRent ? 'rent' : 'sale',
     bedrooms: beds ?? null,

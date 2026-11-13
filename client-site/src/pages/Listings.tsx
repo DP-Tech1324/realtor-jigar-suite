@@ -35,7 +35,9 @@ function parseFilters(search: string) {
 function applyDbFilters(query: any, filters: any) {
   if (filters.city) query = query.ilike("city", `%${filters.city}%`);
   if (filters.province === "ON") query = query.eq("province", "ON");
+  // Commercial is a large share of the MLS® feed; show it only when asked for
   if (filters.propertyType) query = query.eq("property_type", filters.propertyType);
+  else query = query.neq("property_type", "commercial");
 
   // Price filter: min/max (always works, if filled)
   if (filters.minPrice) query = query.gte("price", filters.minPrice);

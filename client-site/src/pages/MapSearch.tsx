@@ -25,6 +25,7 @@ export default function MapSearch() {
         .from("listings")
         .select("id,title,address,city,province,latitude,longitude,price,bedrooms,bathrooms,cover_image,property_type,mls_number,description")
         .not("latitude", "is", null)
+        .neq("property_type", "commercial")
         .neq("status", "draft")
         .order("is_own_listing", { ascending: false })
         .order("created_at", { ascending: false })
