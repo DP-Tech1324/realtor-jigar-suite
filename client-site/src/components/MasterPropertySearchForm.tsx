@@ -2,55 +2,35 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { RESIDENTIAL_TYPES, searchUrl, type SearchFilters } from "@/lib/search";
 
-// --- Options ---
+// --- Options (every value maps to a database filter, see lib/search.ts) ---
 const searchByOptions = [
   { value: "city", label: "City" },
-  { value: "address", label: "Address" },
   { value: "postal_code", label: "Postal Code" },
-  { value: "mls", label: "MLS#" },
+  { value: "mls", label: "MLS®#" },
+  { value: "address", label: "Street / Keywords" },
 ];
 const homeTypeOptions = [
-  { value: "", label: "Home Type" },
-  { value: "detached", label: "Detached" },
-  { value: "semi", label: "Semi-Detached" },
-  { value: "townhouse", label: "Townhouse" },
-  { value: "condo", label: "Condo" },
+  { value: "", label: "Any Home Type" },
+  ...RESIDENTIAL_TYPES,
 ];
+// Commercial sub-types aren't separate in the MLS® feed, so they search the listing text
 const commercialTypeOptions = [
-  { value: "", label: "Commercial Type" },
+  { value: "", label: "Any Commercial" },
   { value: "office", label: "Office" },
   { value: "retail", label: "Retail" },
   { value: "industrial", label: "Industrial" },
+  { value: "business", label: "Business" },
   { value: "land", label: "Land" },
 ];
 const priceOptions = [
-  { value: "", label: "Price Range" },
+  { value: "", label: "Any Price" },
   { value: "0-500000", label: "Up to $500K" },
   { value: "500000-750000", label: "$500K-$750K" },
   { value: "750000-1000000", label: "$750K-$1M" },
   { value: "1000000-2000000", label: "$1M-$2M" },
   { value: "2000000+", label: "$2M+" },
-];
-const propertyTypeOptions = [
-  { value: "", label: "Property Type" },
-  { value: "freehold", label: "Freehold" },
-  { value: "condo", label: "Condo" },
-  { value: "other", label: "Other" },
-];
-const commercialPropertyTypeOptions = [
-  { value: "", label: "Commercial Category" },
-  { value: "office", label: "Office" },
-  { value: "retail", label: "Retail" },
-  { value: "industrial", label: "Industrial" },
-  { value: "land", label: "Land" },
-  { value: "business", label: "Business" },
-];
-const showOnlyOptions = [
-  { value: "", label: "Show Only" },
-  { value: "openhouse", label: "Open House" },
-  { value: "newlistings", label: "New Listings" },
-  { value: "price_reduced", label: "Price Reduced" },
 ];
 
 const defaultFields = {
@@ -63,11 +43,7 @@ const defaultFields = {
   saleType: "sale",
   beds: "",
   baths: "",
-  propertyType: "",
-  commercialPropertyType: "",
   sqft: "",
-  daysOnMarket: "",
-  showOnly: "",
   keywords: "",
 };
 
@@ -100,53 +76,44 @@ export default function MasterPropertySearchForm() {
       commercialType: "",
       beds: "",
       baths: "",
-      propertyType: "",
-      commercialPropertyType: "",
     }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const params: Record<string, string> = {};
+    const filters: Partial<SearchFilters> = { saleType: fields.saleType as SearchFilters["saleType"] };
+    const keywords = [fields.keywords];
 
-    // Main search switch
-    if (fields.search && fields.searchBy) {
-      if (fields.searchBy === "city") params.city = fields.search;
-      if (fields.searchBy === "address") params.address = fields.search;
-      if (fields.searchBy === "postal_code") params.postal_code = fields.search;
-      if (fields.searchBy === "mls") params.mls = fields.search;
+    // Main search box
+    const text = fields.search.trim();
+    if (text) {
+      if (fields.searchBy === "address") keywords.push(text);
+      else filters.location = text;
     }
 
-    // Listing type
-    if (fields.listingType === "residential") {
-      if (fields.homeType) params.propertyType = fields.homeType;
-      if (fields.beds) params.bedrooms = fields.beds;
-      if (fields.baths) params.bathrooms = fields.baths;
-    } else if (fields.listingType === "commercial") {
-      if (fields.commercialType) params.propertyType = fields.commercialType;
-      // Add more commercial mapping if needed
-    }
-
-    // Price
-    if (fields.price) {
-      if (fields.price.includes("-")) {
-        const [min, max] = fields.price.split("-");
-        params.minPrice = min;
-        params.maxPrice = max;
-      } else if (fields.price.endsWith("+")) {
-        params.minPrice = fields.price.replace("+", "");
+    if (fields.listingType === "commercial") {
+      filters.category = "commercial";
+      if (fields.commercialType === "land") filters.propertyType = "land";
+      else {
+        filters.propertyType = "commercial";
+        if (fields.commercialType) keywords.push(fields.commercialType);
       }
+    } else {
+      filters.category = "residential";
+      if (fields.homeType) filters.propertyType = fields.homeType;
+      if (fields.beds) filters.bedrooms = fields.beds;
+      if (fields.baths) filters.bathrooms = fields.baths;
     }
 
-    if (fields.saleType) params.saleType = fields.saleType;
-    if (fields.sqft) params.sqft = fields.sqft;
-    if (fields.daysOnMarket) params.daysOnMarket = fields.daysOnMarket;
-    if (fields.showOnly) params.showOnly = fields.showOnly;
-    if (fields.keywords) params.keywords = fields.keywords;
+    if (fields.price) {
+      const [min, max] = fields.price.replace("+", "-").split("-");
+      if (min && min !== "0") filters.minPrice = min;
+      if (max) filters.maxPrice = max;
+    }
+    if (fields.sqft) filters.minSqft = fields.sqft.replace(/\D/g, "");
+    filters.keywords = keywords.filter(Boolean).join(" ");
 
-    // Query string and nav
-    const qs = new URLSearchParams(params).toString();
-    navigate(qs ? `/listings?${qs}` : "/listings");
+    navigate(searchUrl(filters));
   };
 
   // --- UI Section ---
@@ -177,7 +144,8 @@ export default function MasterPropertySearchForm() {
             name="search"
             value={fields.search}
             onChange={handleChange}
-            placeholder="Type City, Address, Postal Code, MLS#"
+            placeholder={{ city: "e.g. Brampton", postal_code: "e.g. L6Y 1A1", mls: "e.g. W1234567", address: "e.g. Main St, pool, walkout" }[fields.searchBy]}
+            aria-label="Search"
             className={fieldClass}
             autoComplete="off"
           />
@@ -241,52 +209,26 @@ export default function MasterPropertySearchForm() {
             </>
           )}
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          {isResidential ? (
-            <select name="propertyType" value={fields.propertyType} onChange={handleChange} className={selectClass}>
-              {propertyTypeOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          ) : (
-            <select name="commercialPropertyType" value={fields.commercialPropertyType} onChange={handleChange} className={selectClass}>
-              {commercialPropertyTypeOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          )}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <input
             type="text"
+            inputMode="numeric"
             name="sqft"
             value={fields.sqft}
             onChange={handleChange}
-            placeholder="Min Sqft"
+            placeholder="Min Sq Ft"
+            aria-label="Minimum square feet"
             className={fieldClass}
           />
-          <input
-            type="text"
-            name="daysOnMarket"
-            value={fields.daysOnMarket}
-            onChange={handleChange}
-            placeholder="Days On Market"
-            className={fieldClass}
-          />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <select name="showOnly" value={fields.showOnly} onChange={handleChange} className={selectClass}>
-            {showOnlyOptions.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
           <input
             type="text"
             name="keywords"
             value={fields.keywords}
             onChange={handleChange}
             placeholder="Keywords: Pool, Parking, etc."
+            aria-label="Keywords"
             className={fieldClass}
           />
-          <div className="hidden md:block" />
         </div>
         <div className="flex justify-center">
           <Button
