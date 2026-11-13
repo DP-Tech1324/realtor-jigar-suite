@@ -38,7 +38,9 @@ async function readBody(req) {
 async function isAuthorized(req) {
   const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
   if (!token) return false;
-  if (process.env.CRON_SECRET && token === process.env.CRON_SECRET) return true;
+  // A short value is a placeholder, never a usable secret
+  const cronSecret = process.env.CRON_SECRET || '';
+  if (cronSecret.length >= 24 && token === cronSecret) return true;
   const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY, {
     global: { headers: { Authorization: `Bearer ${token}` } },
     auth: { persistSession: false },
