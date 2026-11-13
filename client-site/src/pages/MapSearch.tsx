@@ -23,7 +23,7 @@ export default function MapSearch() {
   useEffect(() => {
     async function fetchProperties() {
       const { data } = await supabase
-        .from("listings")
+        .from("listings_public")
         .select("id,title,address,city,province,latitude,longitude,price,bedrooms,bathrooms,cover_image,property_type,mls_number,description")
         .not("latitude", "is", null)
         .neq("property_type", "commercial")

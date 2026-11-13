@@ -85,6 +85,7 @@ async function sync() {
   });
   const stats = { own_listings: 0, updated: 0, checked: 0, removed: 0, offices_added: 0 };
   const newOfficeKeys = [];
+  let loggedNoPrice = 0;
 
   // Brokerage names already known
   const officeRows = check(await supabase.from('ddf_offices').select('office_key, office_name'), 'Loading offices');
@@ -97,6 +98,15 @@ async function sync() {
       check(await supabase.from('ddf_offices').upsert(rows), 'Saving offices');
       newOffices.forEach((name, key) => { offices.set(key, name); newOfficeKeys.push(key); });
       stats.offices_added += newOffices.size;
+    }
+    // Evidence for the rental mapping: price/lease fields of a few listings with no list price
+    if (loggedNoPrice < 3) {
+      for (const item of items.filter((i) => !i.ListPrice).slice(0, 3 - loggedNoPrice)) {
+        console.log('DDF no-price sample', JSON.stringify(Object.fromEntries(
+          Object.entries(item).filter(([k]) => /price|lease|rent|transaction|sub ?type|structure/i.test(k)),
+        )));
+        loggedNoPrice++;
+      }
     }
     const rows = items.map((item) => toRow(item, { ownKeys, offices })).filter(Boolean);
     if (rows.length) stats.updated += check(await supabase.rpc('upsert_ddf_listings', { rows }), 'Saving listings') || 0;
