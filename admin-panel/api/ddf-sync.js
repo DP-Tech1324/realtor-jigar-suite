@@ -84,6 +84,7 @@ async function sync() {
     auth: { persistSession: false },
   });
   const stats = { own_listings: 0, updated: 0, checked: 0, removed: 0, offices_added: 0 };
+  const newOfficeKeys = [];
 
   // Brokerage names already known
   const officeRows = check(await supabase.from('ddf_offices').select('office_key, office_name'), 'Loading offices');
@@ -94,7 +95,7 @@ async function sync() {
     if (newOffices.size) {
       const rows = [...newOffices].map(([office_key, office_name]) => ({ office_key, office_name }));
       check(await supabase.from('ddf_offices').upsert(rows), 'Saving offices');
-      newOffices.forEach((name, key) => offices.set(key, name));
+      newOffices.forEach((name, key) => { offices.set(key, name); newOfficeKeys.push(key); });
       stats.offices_added += newOffices.size;
     }
     const rows = items.map((item) => toRow(item, { ownKeys, offices })).filter(Boolean);
@@ -186,7 +187,11 @@ async function sync() {
     }
   }
 
-  if (stats.offices_added) check(await supabase.rpc('fill_ddf_office_names'), 'Filling brokerage names');
+  // Listings saved before their office name was known; never fail a run over this
+  if (newOfficeKeys.length) {
+    const { error } = await supabase.rpc('fill_ddf_office_names', { keys: newOfficeKeys });
+    if (error) console.warn('Filling brokerage names skipped:', error.message);
+  }
 
   return {
     ...stats,

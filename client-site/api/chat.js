@@ -31,6 +31,7 @@ async function listingsContext() {
       .from('listings')
       .select('id,title,city,price,transaction_type,property_type,bedrooms,bathrooms,square_footage,facing,vastu_score,vastu')
       .eq('status', 'active')
+      .neq('property_type', 'commercial')
       .order('is_own_listing', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(60);

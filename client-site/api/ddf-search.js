@@ -80,7 +80,9 @@ export default async function handler(req, res) {
     found.forEach((name, key) => offices.set(key, name));
 
     let rows = present(items.map((item) => toRow(item, { offices })).filter(Boolean));
-    if (q.propertyType) rows = rows.filter((r) => r.property_type === q.propertyType);
+    rows = q.propertyType
+      ? rows.filter((r) => r.property_type === q.propertyType)
+      : rows.filter((r) => r.property_type !== 'commercial');
 
     res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
     if (q.key) {
