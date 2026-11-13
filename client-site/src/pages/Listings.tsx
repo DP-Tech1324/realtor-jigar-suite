@@ -17,14 +17,15 @@ async function fetchStored(search: string, page: number): Promise<Page> {
   const filters = parseSearch(search);
   const from = page * PAGE_SIZE;
 
-  const others = applyFilters(supabase.from("listings").select("*"), filters)
+  // listings_public: same rows visitors may see, without RLS planner limits (see migration)
+  const others = applyFilters(supabase.from("listings_public").select("*"), filters)
     .eq("is_own_listing", false)
     .order("created_at", { ascending: false })
     .range(from, from + PAGE_SIZE - 1);
 
   const [own, rest] = await Promise.all([
     page === 0
-      ? applyFilters(supabase.from("listings").select("*"), filters).eq("is_own_listing", true).order("created_at", { ascending: false }).limit(50)
+      ? applyFilters(supabase.from("listings_public").select("*"), filters).eq("is_own_listing", true).order("created_at", { ascending: false }).limit(50)
       : Promise.resolve({ data: [], error: null }),
     others,
   ]);

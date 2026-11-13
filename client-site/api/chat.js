@@ -28,7 +28,7 @@ async function listingsContext() {
       auth: { persistSession: false },
     });
     const { data } = await supabase
-      .from('listings')
+      .from('listings_public')
       .select('id,title,city,price,transaction_type,property_type,bedrooms,bathrooms,square_footage,facing,vastu_score,vastu')
       .eq('status', 'active')
       .neq('property_type', 'commercial')

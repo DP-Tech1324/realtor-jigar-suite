@@ -107,10 +107,14 @@ export function toRow(item, { ownKeys = [], offices = new Map() } = {}) {
   if (!item.ListingKey || !address || !city) return null;
 
   const property_type = mapPropertyType(item);
-  const isRent = !item.ListPrice && !!item.LeaseAmount;
+  // Rentals: CREA may mark them by transaction type, or only by sending a lease amount
+  const leaseAmount = item.LeaseAmount ?? item.TotalActualRent ?? null;
+  const markedLease = /lease|rent/i.test(item.TransactionType || '') && !/sale/i.test(item.TransactionType || '');
+  const isRent = markedLease || (!item.ListPrice && !!leaseAmount);
   // Commercial leases are often priced per square foot or per year; only show a monthly figure
   const leaseIsMonthly = !item.LeaseAmountFrequency || /month/i.test(item.LeaseAmountFrequency);
-  const rent = isRent && leaseIsMonthly && item.LeaseAmount >= 100 ? item.LeaseAmount : null;
+  const monthly = leaseAmount ?? (markedLease ? item.ListPrice : null);
+  const rent = isRent && leaseIsMonthly && monthly >= 100 ? monthly : null;
   const beds = item.BedroomsTotal;
   const photos = (item.Media || [])
     .slice()
