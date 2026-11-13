@@ -35,6 +35,7 @@ import Blog from "./pages/Blog";
 import Favorites from "./pages/Favorites";
 
 import Contact from "./pages/Contact";
+import PreConstruction from "./pages/PreConstruction";
 import Layout from "@/components/Layout";
 
 const queryClient = new QueryClient();
@@ -85,6 +86,7 @@ const App = () => {
                 <Route path="/sellers/marketing-strategy" element={<MarketingStrategy />} />
                 <Route path="/sellers/staging-tips" element={<StagingTips />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/pre-construction" element={<PreConstruction />} />
                 {/* Not found */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

@@ -5,12 +5,11 @@ import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 const NAV = [
   { label: "Home", href: "/", children: [] },
   {
-    label: "Listings", href: "/search", children: [
-      { label: "Residential Search", href: "/search?type=residential" },
-      { label: "Commercial Search", href: "/search?type=commercial" },
-      { label: "Pre-Construction Condo List", href: "/precon-list" },
-      { label: "Pre-Construction Condo Finder", href: "/precon-finder" },
-      { label: "Featured Listings", href: "/#listings" },
+    label: "Listings", href: "/listings", children: [
+      { label: "Residential Search", href: "/listings?category=residential" },
+      { label: "Commercial Search", href: "/listings?category=commercial&propertyType=commercial" },
+      { label: "Featured Listings", href: "/listings?featured=1" },
+      { label: "Pre-Construction Condos", href: "/pre-construction" },
     ]
   },
   {
@@ -32,11 +31,11 @@ const NAV = [
   { label: "Map Search", href: "/map-search", children: [] },
   { label: "Contact Me", href: "/contact", children: [] },
   {
-    label: "Resources", href: "/resources", children: [
+    label: "Resources", href: "/calculators", children: [
       { label: "Calculators", href: "/calculators" },
       { label: "Blog & Articles", href: "/blog" },
       { label: "FAQ", href: "/faq" },
-      { label: "All Tools", href: "/tools" },
+      { label: "All Tools", href: "/calculators" },
     ]
   }
 ];
@@ -51,10 +50,15 @@ export default function ClassicNavbar() {
   // This is the combined height of your TaglineBar + AgentBar (adjust if needed)
   const HEADER_HEIGHT = 160; // px
 
-  const isActive = (href: string) =>
-    href === "/#listings"
-      ? location.hash === "#listings"
-      : location.pathname === href;
+  // A menu is active when the current page is its page or one of its sub-pages
+  const isActive = (item: (typeof NAV)[number]) =>
+    [item.href, ...item.children.map((c) => c.href)].some((href) => href.split("?")[0] === location.pathname) ||
+    (item.label === "Listings" && ["/search", "/listings", "/pre-construction"].includes(location.pathname));
+
+  const go = (href: string) => {
+    setOpenDropdown(null);
+    navigate(href);
+  };
 
   return (
     <nav
@@ -88,19 +92,23 @@ export default function ClassicNavbar() {
               >
                 <button
                   className={`px-5 py-3 text-base font-semibold bg-transparent transition
-                    ${isActive(item.href)
+                    ${isActive(item)
                       ? "border-b-2 border-blue-600 text-blue-700 bg-slate-100"
                       : "text-slate-900 hover:bg-slate-100"}`}
                   style={{
                     minWidth: 120,
                     fontSize: "16px",
                     letterSpacing: ".02em",
-                    borderBottom: isActive(item.href)
+                    borderBottom: isActive(item)
                       ? "2.5px solid #2563eb"
                       : "2.5px solid transparent",
                   }}
+                  aria-expanded={item.children.length ? openDropdown === idx : undefined}
                   onClick={() => {
-                    if (!item.children.length) navigate(item.href);
+                    // Tap opens the submenu on touch screens, where there is no hover. It never
+                    // toggles closed here: on desktop the hover has already opened it.
+                    if (item.children.length) setOpenDropdown(idx);
+                    else go(item.href);
                   }}
                 >
                   {item.label}
@@ -116,7 +124,7 @@ export default function ClassicNavbar() {
                         <li key={sub.label}>
                           <button
                             className="w-full text-left px-7 py-2 text-base hover:bg-blue-50 transition font-normal"
-                            onClick={() => navigate(sub.href)}
+                            onClick={() => go(sub.href)}
                           >
                             {sub.label}
                           </button>
@@ -155,7 +163,7 @@ export default function ClassicNavbar() {
               <div key={item.label}>
                 <button
                   className={`w-full flex items-center justify-between px-2 py-3 text-base font-semibold ${
-                    isActive(item.href) ? "text-blue-700" : "text-slate-900"
+                    isActive(item) ? "text-blue-700" : "text-slate-900"
                   }`}
                   onClick={() => {
                     if (item.children.length) {

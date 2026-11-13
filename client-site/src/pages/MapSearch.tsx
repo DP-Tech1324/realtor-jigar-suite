@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import { supabase } from "@/integrations/supabase/client";
+import { PROPERTY_TYPES } from "@/lib/search";
 import PropertyDetailsModal from "@/components/PropertyDetailsModal";
 
 const containerStyle = { width: "100%", height: "100%" };
@@ -75,11 +76,10 @@ export default function MapSearch() {
             value={filters.type}
             onChange={e => setFilters(f => ({ ...f, type: e.target.value }))}
           >
-            <option value="">All Types</option>
-            <option value="condo">Condo</option>
-            <option value="detached">Detached</option>
-            <option value="industrial">Industrial</option>
-            <option value="vacant land">Vacant Land</option>
+            <option value="">All Homes</option>
+            {PROPERTY_TYPES.filter((t) => t.value !== "commercial").map((t) => (
+              <option key={t.value} value={t.value}>{t.label}</option>
+            ))}
             {/* Add more types as needed */}
           </select>
         </div>
