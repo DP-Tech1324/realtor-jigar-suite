@@ -97,15 +97,15 @@ async function sync() {
     if (rows.length) stats.updated += check(await supabase.rpc('upsert_ddf_listings', { rows }), 'Saving listings') || 0;
   };
 
-  // Where the Ontario load left off. Read before step 1 and ignore Jigar's listings: they are
-  // refreshed every run, and a recent one would otherwise skip every older Ontario listing.
-  const newest = check(
-    await supabase.from('listings').select('ddf_modified_at').eq('source', 'ddf').eq('province', provinceCode)
-      .eq('is_own_listing', false).not('ddf_modified_at', 'is', null)
-      .order('ddf_modified_at', { ascending: false }).limit(1),
-    'Reading sync position',
+  // Where the Ontario load left off. Kept in ddf_sync_state rather than taken from the newest stored
+  // listing: Jigar's own listings (refreshed every run) or listings saved by an earlier, partial sync
+  // would otherwise make the load skip every older Ontario listing.
+  const state = check(await supabase.from('ddf_sync_state').select('*').eq('id', 1).single(), 'Reading sync state');
+  const since = state.incremental_cursor;
+  const saveCursor = async (cursor) => check(
+    await supabase.from('ddf_sync_state').update({ incremental_cursor: cursor, updated_at: new Date().toISOString() }).eq('id', 1),
+    'Saving sync position',
   );
-  const since = newest[0]?.ddf_modified_at;
 
   // 1. Jigar's own listings, wherever they are
   if (ownKeys.length) {
@@ -128,7 +128,11 @@ async function sync() {
   let caughtUp = false;
   while (timeLeft() > 30_000) {
     const page = await ddfGet(token, url);
-    await save(page.value ?? []);
+    const items = page.value ?? [];
+    await save(items);
+    // Pages come oldest first, so the last item is how far the load has got
+    const reached = items[items.length - 1]?.ModificationTimestamp;
+    if (reached) await saveCursor(reached);
     url = page['@odata.nextLink'];
     if (!url) { caughtUp = true; break; }
   }
@@ -136,7 +140,6 @@ async function sync() {
   // 3. Daily pass over every Ontario listing key, to drop sold/expired listings
   let reconcilePending = false;
   if (caughtUp && timeLeft() > 30_000) {
-    const state = check(await supabase.from('ddf_sync_state').select('*').eq('id', 1).single(), 'Reading sync state');
     const due = !state.reconcile_completed_at || Date.now() - new Date(state.reconcile_completed_at).getTime() > RECONCILE_EVERY_MS;
     if (state.reconcile_next_url || due) {
       let next = state.reconcile_next_url;

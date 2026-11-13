@@ -5,6 +5,8 @@
 -- Progress of the "still in the feed?" pass, which may span several runs
 create table if not exists public.ddf_sync_state (
   id smallint primary key default 1 check (id = 1),
+  -- ModificationTimestamp the Ontario load has reached; null = start a full load from the beginning
+  incremental_cursor timestamptz,
   reconcile_next_url text,
   reconcile_started_at timestamptz,
   reconcile_completed_at timestamptz,
