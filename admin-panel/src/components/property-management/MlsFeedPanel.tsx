@@ -29,6 +29,7 @@ async function callSync(body: Record<string, unknown> = {}) {
 export function MlsFeedPanel({ onSynced }: { onSynced: () => void }) {
   const { toast } = useToast();
   const [syncing, setSyncing] = useState(false);
+  const [progress, setProgress] = useState('');
   const [agentName, setAgentName] = useState('Jigar Patel');
   const [searching, setSearching] = useState(false);
   const [matches, setMatches] = useState<AgentMatch[] | null>(null);
@@ -36,16 +37,26 @@ export function MlsFeedPanel({ onSynced }: { onSynced: () => void }) {
   const syncNow = async () => {
     setSyncing(true);
     try {
-      const r = await callSync();
+      // Each call works for up to ~4 minutes; the first full Ontario load takes several calls
+      const total = { updated: 0, removed: 0, own: 0 };
+      for (let round = 1; round <= 30; round++) {
+        setProgress(`Run ${round}: ${total.updated.toLocaleString()} listings saved so far…`);
+        const r = await callSync();
+        total.updated += r.updated || 0;
+        total.removed += r.removed || 0;
+        total.own = r.own_listings || 0;
+        if (!r.more) break;
+      }
       toast({
         title: 'MLS® sync complete',
-        description: `${r.own_listings} of Jigar's listings and ${r.area_listings} area listings fetched, ${r.removed} removed.${r.agent_keys_set ? '' : ' Set DDF_AGENT_KEYS to mark Jigar’s own listings.'}`,
+        description: `${total.updated.toLocaleString()} listings saved, ${total.removed.toLocaleString()} removed, ${total.own} of Jigar's own.${total.own ? '' : ' Set DDF_AGENT_KEYS to mark Jigar’s own listings.'}`,
       });
       onSynced();
     } catch (e: any) {
       toast({ title: 'MLS® sync failed', description: e.message, variant: 'destructive' });
     } finally {
       setSyncing(false);
+      setProgress('');
     }
   };
 
@@ -69,8 +80,9 @@ export function MlsFeedPanel({ onSynced }: { onSynced: () => void }) {
       <CardContent className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <p className="text-sm text-gray-600">
-            MLS® listings sync automatically every night. Jigar's own MLS® listings appear below so you can add Vastu details;
-            other brokerages' listings show on the website only.
+            All Ontario MLS® listings sync automatically twice a day; other provinces are searched live on the website.
+            Jigar's own MLS® listings appear below so you can add Vastu details.
+            {progress && <span className="block mt-1 font-medium text-realtor-navy">{progress}</span>}
           </p>
           <Button onClick={syncNow} disabled={syncing} variant="outline" className="shrink-0">
             {syncing ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}

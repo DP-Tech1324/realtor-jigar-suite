@@ -23,7 +23,12 @@ export default function MapSearch() {
     async function fetchProperties() {
       const { data } = await supabase
         .from("listings")
-        .select("id,title,address,city,province,latitude,longitude,price,bedrooms,bathrooms,cover_image,property_type,mls_number,description");
+        .select("id,title,address,city,province,latitude,longitude,price,bedrooms,bathrooms,cover_image,property_type,mls_number,description")
+        .not("latitude", "is", null)
+        .neq("status", "draft")
+        .order("is_own_listing", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(1000); // all of Ontario is stored; keep the map responsive
       setProperties(data || []);
       setFiltered(data || []);
     }

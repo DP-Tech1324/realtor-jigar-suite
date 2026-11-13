@@ -3,6 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Search, Home, MapPin, DollarSign, BedDouble, Bath, Compass } from "lucide-react";
 import { DIRECTIONS, DIRECTION_LABELS } from "@/lib/vastu";
 
+// Ontario listings are stored and searched in Supabase; other provinces are searched live on CREA
+export const PROVINCE_LABELS: Record<string, string> = {
+  ON: "Ontario", AB: "Alberta", BC: "British Columbia", QC: "Quebec", MB: "Manitoba", SK: "Saskatchewan",
+  NS: "Nova Scotia", NB: "New Brunswick", NL: "Newfoundland & Labrador", PE: "Prince Edward Island",
+  NT: "Northwest Territories", YT: "Yukon", NU: "Nunavut",
+};
+
 const defaultFilters = {
   city: "",
   propertyType: "",
@@ -14,6 +21,7 @@ const defaultFilters = {
   keywords: "",
   facing: "",
   vastu: "", // "1" = Vastu-friendly only (score 7+)
+  province: "",
 };
 
 export default function PropertySearch({ onSearch, initialValues = {} }) {
@@ -55,6 +63,8 @@ export default function PropertySearch({ onSearch, initialValues = {} }) {
           ? `${DIRECTION_LABELS[v] || v} facing`
           : k === "vastu"
           ? "Vastu-friendly"
+          : k === "province"
+          ? PROVINCE_LABELS[v] || v
           : v,
     }));
 
@@ -231,7 +241,22 @@ export default function PropertySearch({ onSearch, initialValues = {} }) {
               ))}
             </select>
           </div>
-          <div className="md:col-span-3 flex items-end">
+          <div>
+            <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
+              <MapPin className="h-4 w-4 mr-2 text-blue-600" /> Province
+            </label>
+            <select
+              value={filters.province}
+              onChange={(e) => handleInputChange("province", e.target.value)}
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All (Ontario first)</option>
+              {Object.entries(PROVINCE_LABELS).map(([code, label]) => (
+                <option key={code} value={code}>{label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="md:col-span-2 flex items-end">
             <label className="flex items-center gap-3 px-4 py-2 border border-gray-200 rounded-xl cursor-pointer w-full md:w-auto min-h-[42px]">
               <input
                 type="checkbox"

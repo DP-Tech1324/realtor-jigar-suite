@@ -104,6 +104,6 @@ export const useIsFavorite = (listingId: string) => {
 
       return !!data;
     },
-    enabled: !!user && !!listingId,
+    enabled: !!user && !!listingId && !listingId.startsWith('ddf-'),
   });
 };

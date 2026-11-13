@@ -26,7 +26,7 @@ import {
   Clock,
   CheckCircle
 } from "lucide-react";
-import { useListing, listingImages } from "@/hooks/useListings";
+import { useListing, listingImages, isLiveListingId } from "@/hooks/useListings";
 import { supabase } from "@/integrations/supabase/client";
 import VastuSection from "@/components/VastuSection";
 import { DdfDetailCredit, isDdf } from "@/components/DdfAttribution";
@@ -57,7 +57,7 @@ const PropertyDetails = () => {
 
   // Count one view per page load for the admin dashboard
   useEffect(() => {
-    if (id) supabase.from('listing_views').insert({ listing_id: id }).then(() => {});
+    if (id && !isLiveListingId(id)) supabase.from('listing_views').insert({ listing_id: id }).then(() => {});
   }, [id]);
 
   // Use the SEO fields from the admin panel for the browser title and meta description
@@ -234,7 +234,7 @@ const PropertyDetails = () => {
           
           {/* Action Buttons */}
           <div className="absolute top-4 right-4 flex space-x-2">
-            {user && (
+            {user && !listing.live && (
               <Button
                 variant="outline"
                 size="sm"
@@ -371,6 +371,16 @@ const PropertyDetails = () => {
               </div>
 
               <DdfDetailCredit listing={listing} />
+
+              {listing.province && listing.province !== 'ON' && (
+                <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 text-slate-800">
+                  <div className="font-semibold text-slate-900 mb-1">Buying outside Ontario?</div>
+                  <p className="text-sm">
+                    Jigar will connect you with a trusted local REALTOR® in {listing.city} and stay with you through the purchase.
+                    Use "Schedule Viewing" or call to get started.
+                  </p>
+                </div>
+              )}
 
               {showVastu && (
                 <>
@@ -553,7 +563,11 @@ const PropertyDetails = () => {
                   <X className="h-6 w-6" />
                 </Button>
               </div>
-              <InquiryForm listingId={listing.id} listingTitle={listing.title} initialMessage={contactMessage} />
+              <InquiryForm
+                listingId={listing.live ? undefined : listing.id}
+                listingTitle={listing.mls_number ? `${listing.title} (MLS® ${listing.mls_number})` : listing.title}
+                initialMessage={contactMessage}
+              />
             </div>
           </div>
         </div>
