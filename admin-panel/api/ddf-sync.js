@@ -13,12 +13,14 @@
 // Listings outside Ontario are not stored; client-site/api/ddf-search.js searches them live.
 //
 // Env: DDF_CLIENT_ID, DDF_CLIENT_SECRET, DDF_AGENT_KEYS (comma separated), DDF_PROVINCE (default Ontario),
-//      CRON_SECRET, SUPABASE_SERVICE_ROLE_KEY, VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+//      CRON_SECRET, SERVICE_ROLE_KEY (or SUPABASE_SERVICE_ROLE_KEY), VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
 
 import { createClient } from '@supabase/supabase-js';
 import { DDF_API, PROVINCES, ddfGet, getToken, lookupOffices, odataString, propertyUrl, toRow } from './_lib/ddf.js';
 
 const STAFF_ROLES = ['superadmin', 'admin', 'editor'];
+// Either name works; the Vercel project uses SERVICE_ROLE_KEY
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SERVICE_ROLE_KEY;
 const TIME_BUDGET_MS = 240_000; // stay well inside the 300 s function limit
 const RECONCILE_EVERY_MS = 20 * 60 * 60 * 1000;
 
@@ -78,7 +80,7 @@ async function sync() {
   const ownKeys = list(process.env.DDF_AGENT_KEYS);
   const provinceName = process.env.DDF_PROVINCE || 'Ontario';
   const provinceCode = PROVINCES[provinceName] || provinceName;
-  const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+  const supabase = createClient(process.env.VITE_SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
   });
   const stats = { own_listings: 0, updated: 0, checked: 0, removed: 0, offices_added: 0 };
@@ -199,8 +201,8 @@ export default async function handler(req, res) {
   if (!['GET', 'POST'].includes(req.method)) return res.status(405).json({ error: 'Method not allowed' });
   try {
     if (!(await isAuthorized(req))) return res.status(401).json({ error: 'Not authorized.' });
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY is not set in Vercel.' });
+    if (!SERVICE_ROLE_KEY) {
+      return res.status(500).json({ error: 'SERVICE_ROLE_KEY (Supabase service_role key) is not set in Vercel.' });
     }
     const body = req.method === 'POST' ? await readBody(req) : {};
     if (body.find_agent) {
