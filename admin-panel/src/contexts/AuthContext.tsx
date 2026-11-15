@@ -29,124 +29,85 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userRole, setUserRole] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const refreshProfile = useCallback(async () => {
-    if (!user) {
-      setProfile(null);
-      setIsAdmin(false);
-      setIsAgent(false);
-      setUserRole(null);
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('isAdmin');
+  const clearRole = () => {
+    setProfile(null);
+    setIsAdmin(false);
+    setIsAgent(false);
+    setUserRole(null);
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('isAdmin');
+  };
+
+  // Look up the staff role for this user. Takes the user explicitly so it never runs
+  // against a stale (signed-out) value from an earlier render.
+  const resolveRole = useCallback(async (currentUser: User | null) => {
+    if (!currentUser) {
+      clearRole();
+      return;
+    }
+    const { data: role, error } = await supabase.rpc('get_current_user_role');
+    if (error || !role) {
+      console.error('Role lookup failed:', error);
+      // Keep a role saved for this same user if the lookup is only temporarily failing
+      const saved = localStorage.getItem('userRole');
+      if (saved) {
+        setUserRole(saved);
+        setIsAdmin(localStorage.getItem('isAdmin') === 'true');
+      } else {
+        clearRole();
+      }
       return;
     }
 
-    try {
-      console.log('🔄 Refreshing profile for user:', user.id);
+    const adminStatus = ['admin', 'superadmin', 'editor'].includes(role);
+    setUserRole(role);
+    setIsAdmin(adminStatus);
+    setIsAgent(false);
+    localStorage.setItem('userRole', role);
+    localStorage.setItem('isAdmin', String(adminStatus));
 
-      const { data: roleData, error: roleError } = await supabase.rpc('get_current_user_role');
-      console.log('DEBUG: get_current_user_role returned:', { roleData, roleError, userId: user?.id });
-
-      if (roleError || !roleData) {
-        console.error('❌ Role fetch error:', roleError);
-
-        // Graceful fallback using localStorage
-        const fallbackRole = localStorage.getItem('userRole');
-        const fallbackAdmin = localStorage.getItem('isAdmin') === 'true';
-
-        if (fallbackRole) {
-          console.warn('⚠️ Using fallback from localStorage');
-          setUserRole(fallbackRole);
-          setIsAdmin(fallbackAdmin);
-          return;
-        }
-
-        setIsAdmin(false);
-        setUserRole(null);
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('isAdmin');
-        return;
-      }
-      
-      const role = roleData;
-      const adminStatus = ['admin', 'superadmin', 'editor'].includes(role);
-
-      console.log('🔍 User role:', role);
-      console.log('🔐 Is Admin:', adminStatus);
-
-      setUserRole(role);
-      setIsAdmin(adminStatus);
-      setIsAgent(false);
-
-      localStorage.setItem('userRole', role);
-      localStorage.setItem('isAdmin', adminStatus.toString());
-
-      if (adminStatus) {
-        const { data: adminData, error: adminError } = await supabase
-          .from('admin_users')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('is_active', true)
-          .single();
-
-        if (!adminError && adminData) {
-          setProfile(adminData);
-        }
-      }
-    } catch (error) {
-      console.error('❌ Error in refreshProfile:', error);
-      setIsAdmin(false);
-      setIsAgent(false);
-      setUserRole(null);
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('isAdmin');
+    if (adminStatus) {
+      const { data } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .eq('is_active', true)
+        .maybeSingle();
+      setProfile(data ?? null);
+    } else {
+      setProfile(null);
     }
-  }, [user]);
+  }, []);
+
+  const refreshProfile = useCallback(async () => {
+    const { data } = await supabase.auth.getSession();
+    await resolveRole(data.session?.user ?? null);
+  }, [resolveRole]);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, currentSession) => {
-        console.log('🔔 Auth state changed:', _event, currentSession?.user?.id);
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
+    // Whose role is loaded; token refreshes for the same user don't reload it
+    let loadedFor: string | null | undefined;
 
-        if (currentSession?.user) {
-          setTimeout(() => refreshProfile(), 0);
-        } else {
-          setProfile(null);
-          setIsAdmin(false);
-          setIsAgent(false);
-          setUserRole(null);
-          localStorage.removeItem('userRole');
-          localStorage.removeItem('isAdmin');
-        }
-        setIsLoading(false);
-      }
-    );
-
-    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
-      console.log('🟢 Initial session:', currentSession?.user?.id);
+    // INITIAL_SESSION fires on subscribe, so this also covers page load.
+    // No awaiting inside the callback (supabase-js holds its auth lock there); the role
+    // lookup runs just after, and the app shows "loading" until it is known.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      const currentUser = currentSession?.user ?? null;
       setSession(currentSession);
-      setUser(currentSession?.user ?? null);
+      setUser(currentUser);
 
-      if (currentSession?.user) {
-        const savedRole = localStorage.getItem('userRole');
-        const savedAdmin = localStorage.getItem('isAdmin') === 'true';
-
-        if (savedRole) {
-          setUserRole(savedRole);
-          setIsAdmin(savedAdmin);
-        }
-
-        await refreshProfile();
-      }
-
-      setIsLoading(false);
+      const id = currentUser?.id ?? null;
+      if (id === loadedFor) return;
+      loadedFor = id;
+      setIsLoading(true);
+      setTimeout(async () => {
+        await resolveRole(currentUser);
+        if (loadedFor === id) setIsLoading(false);
+      }, 0);
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [refreshProfile]);
+    return () => subscription.unsubscribe();
+  }, [resolveRole]);
 
   const signIn = async (email: string, password: string) => {
     try {

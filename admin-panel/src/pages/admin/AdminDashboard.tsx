@@ -2,13 +2,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building, Users, MessageSquare, BarChart3, TrendingUp, Clock, AlertCircle } from 'lucide-react';
+import { Building, Users, MessageSquare, BarChart3, Clock, AlertCircle } from 'lucide-react';
 import { useAdminData } from '@/hooks/useAdminData';
+import { timeAgo, useActivityFeed } from '@/hooks/useActivityFeed';
+import { ActivityIcon } from '@/components/ActivityIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 const AdminDashboard = () => {
   const { stats, loading } = useAdminData();
+  const { data: activity = [], isLoading: activityLoading } = useActivityFeed(8);
   const { userRole } = useAuth();
 
   if (loading) {
@@ -112,7 +115,6 @@ const AdminDashboard = () => {
                       </div>
                       <p className="text-xs sm:text-sm text-gray-500">{stat.subtitle}</p>
                     </div>
-                    <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />
                   </div>
                 </CardContent>
               </Card>
@@ -159,29 +161,29 @@ const AdminDashboard = () => {
             <CardTitle className="text-base sm:text-lg">Recent Activity</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 sm:space-y-3">
-              <div className="flex items-center p-2 sm:p-3 rounded-lg bg-blue-50">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mr-2 sm:mr-3"></div>
-                <div className="flex-1">
-                  <p className="text-xs sm:text-sm font-medium">New property listing added</p>
-                  <p className="text-xs text-gray-500">2 hours ago</p>
-                </div>
+            {activityLoading ? (
+              <p className="text-sm text-gray-500">Loading…</p>
+            ) : activity.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                Nothing yet. New inquiries, consultation requests, newsletter sign-ups and listing changes appear here.
+              </p>
+            ) : (
+              <div className="space-y-1">
+                {activity.map((a) => (
+                  <Link key={a.id} to={a.link} className="flex items-start gap-3 p-2 sm:p-3 rounded-lg hover:bg-gray-50">
+                    <ActivityIcon kind={a.kind} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm font-medium truncate">{a.title}</p>
+                      {a.detail && <p className="text-xs text-gray-500 truncate">{a.detail}</p>}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-xs text-gray-400">{timeAgo(a.at)}</p>
+                      {a.needsAction && <p className="text-xs text-orange-600 font-medium">Needs reply</p>}
+                    </div>
+                  </Link>
+                ))}
               </div>
-              <div className="flex items-center p-2 sm:p-3 rounded-lg bg-green-50">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2 sm:mr-3"></div>
-                <div className="flex-1">
-                  <p className="text-xs sm:text-sm font-medium">Inquiry status updated</p>
-                  <p className="text-xs text-gray-500">5 hours ago</p>
-                </div>
-              </div>
-              <div className="flex items-center p-2 sm:p-3 rounded-lg bg-orange-50">
-                <div className="w-2 h-2 bg-orange-500 rounded-full mr-2 sm:mr-3"></div>
-                <div className="flex-1">
-                  <p className="text-xs sm:text-sm font-medium">New user registered</p>
-                  <p className="text-xs text-gray-500">1 day ago</p>
-                </div>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>

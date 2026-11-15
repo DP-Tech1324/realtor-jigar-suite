@@ -4,25 +4,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mail, CheckCircle, TrendingUp, Home, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const NewsletterSignup = () => {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Saved to newsletter_subscriptions; Jigar sees and exports the list in the admin
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitted(true);
-      toast({
-        title: "Successfully subscribed!",
-        description: "You'll receive our weekly market updates and exclusive listings.",
-      });
-      setEmail("");
-    }, 1000);
+    const { error } = await supabase.from("newsletter_subscriptions").insert({ email: email.trim().toLowerCase() });
+    // 23505 = already subscribed, which is a success from the visitor's side
+    if (error && error.code !== "23505") {
+      toast({ title: "Couldn't subscribe", description: "Please try again in a moment.", variant: "destructive" });
+      return;
+    }
+    setIsSubmitted(true);
+    toast({
+      title: "Successfully subscribed!",
+      description: "You'll receive market updates and new listings from Jigar.",
+    });
+    setEmail("");
   };
 
   const benefits = [

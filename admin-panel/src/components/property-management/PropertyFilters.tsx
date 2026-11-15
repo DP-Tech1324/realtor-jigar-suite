@@ -54,12 +54,12 @@ export function PropertyFilters({
           />
         </div>
 
-        <Select value={cityFilter} onValueChange={setCityFilter}>
+        <Select value={cityFilter || 'all'} onValueChange={(v) => setCityFilter(v === 'all' ? '' : v)}>
           <SelectTrigger>
             <SelectValue placeholder="Filter by city" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Cities</SelectItem>
+            <SelectItem value="all">All Cities</SelectItem>
             <SelectItem value="Toronto">Toronto</SelectItem>
             <SelectItem value="Woodbridge">Woodbridge</SelectItem>
             <SelectItem value="Richmond Hill">Richmond Hill</SelectItem>
@@ -69,23 +69,23 @@ export function PropertyFilters({
           </SelectContent>
         </Select>
 
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter || 'all'} onValueChange={(v) => setStatusFilter(v === 'all' ? '' : v)}>
           <SelectTrigger>
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Status</SelectItem>
+            <SelectItem value="all">All Status</SelectItem>
             <SelectItem value="published">Published</SelectItem>
             <SelectItem value="draft">Draft</SelectItem>
           </SelectContent>
         </Select>
 
-        <Select value={priceFilter} onValueChange={setPriceFilter}>
+        <Select value={priceFilter || 'all'} onValueChange={(v) => setPriceFilter(v === 'all' ? '' : v)}>
           <SelectTrigger>
             <SelectValue placeholder="Filter by price" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Prices</SelectItem>
+            <SelectItem value="all">All Prices</SelectItem>
             <SelectItem value="0-500000">Under $500K</SelectItem>
             <SelectItem value="500000-750000">$500K - $750K</SelectItem>
             <SelectItem value="750000-1000000">$750K - $1M</SelectItem>

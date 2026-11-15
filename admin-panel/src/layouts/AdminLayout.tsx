@@ -3,6 +3,7 @@ import React from 'react';
 import { Outlet, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import AdminSidebar from '@/components/AdminSidebar';
+import PageErrorBoundary from '@/components/PageErrorBoundary';
 import NotificationPanel from '@/components/ui/NotificationPanel';
 import { Button } from '@/components/ui/button';
 import { LogOut, Menu, X, RefreshCw } from 'lucide-react';
@@ -119,7 +120,9 @@ const AdminLayout = () => {
         {/* Page content with better spacing */}
         <section className="flex-1 p-3 sm:p-4 lg:p-6 overflow-auto">
           <div className="max-w-7xl mx-auto">
-            <Outlet />
+            <PageErrorBoundary resetKey={location.pathname}>
+              <Outlet />
+            </PageErrorBoundary>
           </div>
         </section>
       </main>

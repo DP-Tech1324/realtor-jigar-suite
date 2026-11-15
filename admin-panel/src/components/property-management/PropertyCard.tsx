@@ -35,6 +35,7 @@ export function PropertyCard({ property, onEdit, onDelete, onToggleStatus }: Pro
   const getMarketStatusColor = (marketStatus?: string) => {
     switch (marketStatus) {
       case 'sold':
+      case 'leased':
         return 'bg-red-100 text-red-800';
       case 'pending':
         return 'bg-orange-100 text-orange-800';
@@ -44,6 +45,12 @@ export function PropertyCard({ property, onEdit, onDelete, onToggleStatus }: Pro
         return 'bg-green-100 text-green-800';
     }
   };
+
+  // market_status only says active/pending/sold; rentals read "for-rent" / "leased"
+  const rental = property.transaction_type === 'rent';
+  const marketLabel = rental
+    ? ({ 'for-sale': 'for-rent', sold: 'leased', pending: 'pending' } as const)[property.market_status]
+    : property.market_status;
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
@@ -65,8 +72,8 @@ export function PropertyCard({ property, onEdit, onDelete, onToggleStatus }: Pro
             {property.status}
           </Badge>
           {property.market_status && (
-            <Badge className={getMarketStatusColor(property.market_status)}>
-              {property.market_status}
+            <Badge className={getMarketStatusColor(marketLabel)}>
+              {marketLabel}
             </Badge>
           )}
           {property.featured && (
@@ -94,7 +101,7 @@ export function PropertyCard({ property, onEdit, onDelete, onToggleStatus }: Pro
               {property.title}
             </h3>
             <p className="text-2xl font-bold text-realtor-gold">
-              {formatPrice(property.price)}
+              {formatPrice(property.price)}{rental && <span className="text-base font-normal text-gray-500">/month</span>}
             </p>
           </div>
 
@@ -114,10 +121,12 @@ export function PropertyCard({ property, onEdit, onDelete, onToggleStatus }: Pro
               <Bath className="h-4 w-4 mr-1" />
               <span>{property.bathrooms} bath</span>
             </div>
-            <div className="flex items-center">
-              <Square className="h-4 w-4 mr-1" />
-              <span>{property.square_feet || 0} sqft</span>
-            </div>
+            {property.square_feet ? (
+              <div className="flex items-center">
+                <Square className="h-4 w-4 mr-1" />
+                <span>{property.square_feet.toLocaleString()} sqft</span>
+              </div>
+            ) : null}
           </div>
 
           {property.description && (
