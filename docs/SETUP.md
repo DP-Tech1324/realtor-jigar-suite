@@ -63,6 +63,9 @@ CREA DDF®  →  client-site/api/ddf-search.js (live, cached 5 min)  →  websit
 
 Upserts never overwrite what Jigar edits in the admin panel (facing, Vastu, featured, SEO). Up to 15 photos are
 stored per listing so Ontario fits in the free Supabase plan (500 MB). Check Supabase → Usage after the first load.
+Keyword search uses an expression index rather than a stored search column (saves ~150 MB; see
+`20261115010000_search_expression_index.sql`). After large deletes or column drops, run `VACUUM FULL public.listings`
+over psql (session pooler) to hand the space back; the dashboard SQL editor times out on it.
 
 **Rest of Canada (live).** Choosing another province in the search bar, or searching a city that isn't stored
 (e.g. "Calgary"), queries CREA live. These listings aren't saved; their pages load live too, and inquiries

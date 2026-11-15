@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import { supabase } from "@/integrations/supabase/client";
 import { PROPERTY_TYPES } from "@/lib/search";
+import { formatListingPrice } from "@/lib/price";
 import PropertyDetailsModal from "@/components/PropertyDetailsModal";
 
 const containerStyle = { width: "100%", height: "100%" };
@@ -24,7 +25,7 @@ export default function MapSearch() {
     async function fetchProperties() {
       const { data } = await supabase
         .from("listings_public")
-        .select("id,title,address,city,province,latitude,longitude,price,bedrooms,bathrooms,cover_image,property_type,mls_number,description")
+        .select("id,title,address,city,province,latitude,longitude,price,transaction_type,bedrooms,bathrooms,cover_image,property_type,mls_number,description")
         .not("latitude", "is", null)
         .neq("property_type", "commercial")
         .neq("status", "draft")
@@ -136,7 +137,7 @@ export default function MapSearch() {
               <div>
                 <div className="font-semibold">{prop.title}</div>
                 <div className="text-blue-700 font-bold">
-                  {prop.price ? `$${Number(prop.price).toLocaleString()}` : ""}
+                  {prop.price ? formatListingPrice(prop) : ""}
                 </div>
                 <div className="text-sm">{prop.address}, {prop.city}</div>
                 <div className="text-xs mt-1">{prop.bedrooms} beds | {prop.bathrooms} baths</div>

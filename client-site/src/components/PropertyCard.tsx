@@ -6,6 +6,7 @@ import { Heart, Bed, Bath, Square, MapPin, Camera, Eye, Compass } from 'lucide-r
 import { Listing, listingImages } from '@/hooks/useListings';
 import { parseVastu } from '@/lib/vastu';
 import { DdfCardCredit } from '@/components/DdfAttribution';
+import { formatListingPrice, isRental } from '@/lib/price';
 import { useIsFavorite, useToggleFavorite } from '@/hooks/useFavorites';
 import { useAuth } from '@/components/auth/AuthContext';
 
@@ -19,14 +20,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ listing, onViewDetails }) =
   const { data: isFavorite } = useIsFavorite(listing.id);
   const toggleFavorite = useToggleFavorite();
 
-  const formatPrice = (price?: number) => {
-    if (!price) return 'Price on request';
-    return new Intl.NumberFormat('en-CA', {
-      style: 'currency',
-      currency: 'CAD',
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -84,7 +77,10 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ listing, onViewDetails }) =
                 {listing.transaction_type === 'rent' ? 'LEASED' : 'SOLD'}
               </Badge>
             )}
-            {listing.price && listing.price > 1500000 && (
+            {isRental(listing) && listing.status !== 'sold' && (
+              <Badge className="bg-emerald-600 text-white font-bold px-3 py-1 shadow-lg w-fit">FOR RENT</Badge>
+            )}
+            {!isRental(listing) && listing.price && listing.price > 1500000 && (
               <Badge className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold px-3 py-1 shadow-lg">
                 Luxury
               </Badge>
@@ -120,7 +116,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ listing, onViewDetails }) =
         <div className="absolute bottom-4 left-4">
           <div className="bg-white/95 backdrop-blur-sm rounded-xl px-4 py-2 shadow-lg">
             <div className="text-2xl font-bold text-slate-900">
-              {formatPrice(listing.price)}
+              {formatListingPrice(listing)}
             </div>
           </div>
         </div>

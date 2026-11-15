@@ -31,6 +31,7 @@ import { supabase } from "@/integrations/supabase/client";
 import VastuSection from "@/components/VastuSection";
 import VastuCheck from "@/components/VastuCheck";
 import { DdfDetailCredit, isDdf } from "@/components/DdfAttribution";
+import { formatListingPrice, isRental } from "@/lib/price";
 import { parseVastu } from "@/lib/vastu";
 import { useIsFavorite, useToggleFavorite } from "@/hooks/useFavorites";
 import { useAuth } from "@/components/auth/AuthContext";
@@ -139,14 +140,6 @@ const PropertyDetails = () => {
     setShowContactForm(true);
   };
   
-  const formatPrice = (price?: number) => {
-    if (!price) return 'Price on request';
-    return new Intl.NumberFormat('en-CA', {
-      style: 'currency',
-      currency: 'CAD',
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
 
   const handleFavoriteClick = () => {
     if (!user || !id) return;
@@ -270,7 +263,7 @@ const PropertyDetails = () => {
           <div className="absolute bottom-4 right-4">
             <div className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-xl shadow-lg">
               <div className="text-2xl md:text-3xl font-bold">
-                {formatPrice(listing.price)}
+                {formatListingPrice(listing)}
               </div>
             </div>
           </div>
@@ -291,6 +284,7 @@ const PropertyDetails = () => {
                       <Badge className="bg-blue-600 text-white">
                         {listing.property_type.replace('_', ' ').toUpperCase()}
                       </Badge>
+                      {isRental(listing) && listing.status !== 'sold' && <Badge className="bg-emerald-600 text-white">FOR RENT</Badge>}
                       {listing.status === 'pending' && <Badge className="bg-amber-500 text-white">PENDING</Badge>}
                       {listing.status === 'sold' && <Badge className="bg-slate-700 text-white">{listing.transaction_type === 'rent' ? 'LEASED' : 'SOLD'}</Badge>}
                       {showVastu && (
