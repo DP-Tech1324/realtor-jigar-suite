@@ -7,6 +7,7 @@ import AiChatBubble from "@/components/AiChatBubble";
 
 // Admin pages
 import AuthPage from '@/pages/auth/AuthPage';
+import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
 import AdminLayout from '@/layouts/AdminLayout';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import AdminProperties from '@/pages/admin/AdminProperties';
@@ -56,6 +57,7 @@ function App() {
 
             {/* Auth Route always accessible */}
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/access-denied" element={<AccessDenied />} />
 
             {/* Admin Routes */}

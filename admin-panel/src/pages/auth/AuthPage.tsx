@@ -15,6 +15,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { supabase } from '@/integrations/supabase/client';
 
 const AuthPage: React.FC = () => {
   const { signIn, signUp, refreshProfile } = useAuth();
@@ -26,6 +27,9 @@ const AuthPage: React.FC = () => {
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [isLoginLoading, setIsLoginLoading] = useState(false);
+  const [forgot, setForgot] = useState(false);
+  const [resetSending, setResetSending] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
@@ -65,6 +69,22 @@ const AuthPage: React.FC = () => {
     } finally {
       setIsLoginLoading(false);
     }
+  };
+
+  // Emails a link to /reset-password on this same site (localhost or the live admin)
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loginEmail) return;
+    setResetSending(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(loginEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setResetSending(false);
+    if (error) {
+      toast({ title: 'Could not send the reset email', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setResetSent(true);
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -109,6 +129,30 @@ const AuthPage: React.FC = () => {
                   </TabsList>
 
                   <TabsContent value="login">
+                    {forgot ? (
+                      <form onSubmit={handleForgot} className="space-y-4">
+                        {resetSent ? (
+                          <p className="text-sm text-gray-700">
+                            If <strong>{loginEmail}</strong> has an account, a reset link is on its way. Open it on this
+                            device to choose a new password. Check spam if it doesn't arrive in a few minutes.
+                          </p>
+                        ) : (
+                          <>
+                            <p className="text-sm text-gray-600">Enter your email and we'll send you a link to choose a new password.</p>
+                            <div className="space-y-2">
+                              <Label htmlFor="reset-email">Email</Label>
+                              <Input id="reset-email" type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required />
+                            </div>
+                            <Button type="submit" className="w-full bg-realtor-gold hover:bg-realtor-gold/90 text-white" disabled={resetSending}>
+                              {resetSending ? 'Sending...' : 'Send reset link'}
+                            </Button>
+                          </>
+                        )}
+                        <button type="button" className="text-sm text-realtor-navy hover:underline" onClick={() => { setForgot(false); setResetSent(false); }}>
+                          Back to sign in
+                        </button>
+                      </form>
+                    ) : (
                     <form onSubmit={handleLogin}>
                       <div className="space-y-4">
                         <div className="space-y-2">
@@ -122,8 +166,12 @@ const AuthPage: React.FC = () => {
                         <Button type="submit" className="w-full bg-realtor-gold hover:bg-realtor-gold/90 text-white" disabled={isLoginLoading}>
                           {isLoginLoading ? 'Signing in...' : 'Sign In'}
                         </Button>
+                        <button type="button" className="text-sm text-realtor-navy hover:underline" onClick={() => setForgot(true)}>
+                          Forgot password?
+                        </button>
                       </div>
                     </form>
+                    )}
                   </TabsContent>
 
                   <TabsContent value="register">
