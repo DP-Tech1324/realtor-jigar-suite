@@ -155,3 +155,123 @@ export function toRow(item, { ownKeys = [], offices = new Map() } = {}) {
     ddf_modified_at: item.ModificationTimestamp || null,
   };
 }
+
+// Full CREA record -> the grouped facts a property page shows (summary, building, land and
+// parking, rooms). Fetched live per page view instead of stored, so it costs no database space.
+const joined = (v) => (Array.isArray(v) ? v.filter(Boolean).join(', ') : v) || null;
+const money = (n) => (n ? `$${Math.round(n).toLocaleString('en-CA')}` : null);
+function unitLabel(u = '') {
+  if (/square ?f(ee)?t|sq ?ft/i.test(u)) return 'sqft';
+  if (/square ?met|sq ?m/i.test(u)) return 'm²';
+  if (/acre/i.test(u)) return 'acres';
+  if (/hectare/i.test(u)) return 'ha';
+  if (/feet|foot|ft/i.test(u)) return 'ft';
+  if (/met/i.test(u)) return 'm';
+  return u;
+}
+const measure = (n, unit) => (Number(n) ? `${Number(n).toLocaleString('en-CA')} ${unitLabel(unit)}`.trim() : null);
+function feetInches(feet) {
+  let f = Math.floor(feet);
+  let i = Math.round((feet - f) * 12);
+  if (i === 12) { f += 1; i = 0; }
+  return `${f}' ${i}"`;
+}
+const facts = (pairs) => pairs
+  .filter(([, v]) => v !== null && v !== undefined && v !== '')
+  .map(([label, value]) => ({ label, value: String(value) }));
+
+function toRoom(r) {
+  const units = r.RoomLengthWidthUnits || '';
+  const toMetres = /met|^m$/i.test(units) ? 1 : /feet|foot|ft/i.test(units) ? 0.3048 : null;
+  const sized = toMetres && Number(r.RoomLength) && Number(r.RoomWidth);
+  const m = sized ? [r.RoomLength * toMetres, r.RoomWidth * toMetres] : null;
+  return {
+    type: r.RoomType || 'Room',
+    level: r.RoomLevel || null,
+    metric: m ? `${m[0].toFixed(2)} m x ${m[1].toFixed(2)} m` : null,
+    imperial: m ? `${feetInches(m[0] / 0.3048)} x ${feetInches(m[1] / 0.3048)}` : null,
+    dimensions: r.RoomDimensions || null,
+    description: r.RoomDescription || null,
+  };
+}
+
+export function toDetails(item) {
+  const fee = item.AssociationFee
+    ? `${money(item.AssociationFee)}${item.AssociationFeeFrequency ? ` / ${String(item.AssociationFeeFrequency).toLowerCase()}` : ''}`
+    : null;
+  const tax = item.TaxAnnualAmount ? `${money(item.TaxAnnualAmount)}${item.TaxYear ? ` (${item.TaxYear})` : ''}` : null;
+  const bedrooms = item.BedroomsAboveGrade != null || item.BedroomsBelowGrade != null
+    ? `${item.BedroomsAboveGrade ?? 0} above grade${item.BedroomsBelowGrade ? ` + ${item.BedroomsBelowGrade} below grade` : ''}`
+    : null;
+  const bathrooms = item.BathroomsTotalInteger != null
+    ? `${item.BathroomsTotalInteger}${item.BathroomsPartial ? ` (${item.BathroomsPartial} partial)` : ''}`
+    : null;
+  const fireplace = item.FireplacesTotal
+    ? [item.FireplacesTotal, joined(item.FireplaceFeatures)].filter(Boolean).join(' · ')
+    : item.FireplaceYN === true ? 'Yes' : null;
+
+  return {
+    summary: facts([
+      ['Property type', item.PropertySubType],
+      ['Building type', joined(item.StructureType)],
+      ['Ownership', item.CommonInterest],
+      ['Storeys', item.Stories],
+      ['Neighbourhood', item.SubdivisionName || item.CityRegion],
+      ['Annual property taxes', tax],
+      ['Maintenance fee', fee],
+      ['Fee includes', joined(item.AssociationFeeIncludes)],
+      ['Available', item.AvailabilityDate ? String(item.AvailabilityDate).slice(0, 10) : null],
+      ['Directions', item.Directions],
+      ['Real estate board', item.ListAOR],
+    ]),
+    building: facts([
+      ['Architectural style', joined(item.ArchitecturalStyle)],
+      ['Bedrooms', bedrooms],
+      ['Bathrooms', bathrooms],
+      ['Interior size', measure(item.LivingArea || item.AboveGradeFinishedArea, item.LivingAreaUnits || item.AboveGradeFinishedAreaUnits)],
+      ['Finished below grade', measure(item.BelowGradeFinishedArea, item.BelowGradeFinishedAreaUnits)],
+      ['Building area', measure(item.BuildingAreaTotal, item.BuildingAreaUnits)],
+      ['Basement', joined(item.Basement)],
+      ['Foundation', joined(item.FoundationDetails)],
+      ['Exterior finish', joined(item.ConstructionMaterials)],
+      ['Exterior features', joined(item.ExteriorFeatures)],
+      ['Roof', joined(item.Roof)],
+      ['Flooring', joined(item.Flooring)],
+      ['Heating', joined(item.Heating)],
+      ['Cooling', joined(item.Cooling)],
+      ['Fireplace', fireplace],
+      ['Appliances included', joined(item.Appliances)],
+      ['Building features', joined(item.BuildingFeatures)],
+      ['Accessibility', joined(item.AccessibilityFeatures)],
+      ['Security', joined(item.SecurityFeatures)],
+      ['Condition', joined(item.PropertyCondition)],
+      ['Year built', item.YearBuilt],
+    ]),
+    land: facts([
+      ['Lot size', item.LotSizeDimensions || measure(item.LotSizeArea, item.LotSizeUnits)],
+      ['Frontage', measure(item.FrontageLengthNumeric, item.FrontageLengthNumericUnits)],
+      ['Lot features', joined(item.LotFeatures)],
+      ['Parking', joined(item.ParkingFeatures)],
+      ['Parking spaces', item.ParkingTotal],
+      ['Fencing', joined(item.Fencing)],
+      ['Pool', joined(item.PoolFeatures)],
+      ['View', joined(item.View)],
+      ['Waterfront', joined(item.WaterfrontFeatures)],
+      ['Water body', item.WaterBodyName],
+      ['Community features', joined(item.CommunityFeatures)],
+      ['Zoning', item.ZoningDescription || item.Zoning],
+      ['Sewer', joined(item.Sewer)],
+      ['Water', joined(item.WaterSource)],
+      ['Utilities', joined(item.Utilities)],
+      ['Electric', joined(item.Electric)],
+      ['Road', joined(item.RoadSurfaceType)],
+      ['Business type', joined(item.BusinessType)],
+      ['Current use', joined(item.CurrentUse)],
+      ['Possible use', joined(item.PossibleUse)],
+      ['Units', item.NumberOfUnitsTotal],
+      ['Buildings', item.NumberOfBuildings],
+    ]),
+    rooms: (item.Rooms || []).map(toRoom),
+    inclusions: item.Inclusions || null,
+  };
+}

@@ -38,6 +38,7 @@ export interface Listing {
   vastu_score?: number | null;
   // CREA DDF® feed fields (source = 'ddf')
   source?: 'manual' | 'ddf';
+  listing_key?: string | null;
   listing_url?: string | null;
   list_office_name?: string | null;
   is_own_listing?: boolean;
