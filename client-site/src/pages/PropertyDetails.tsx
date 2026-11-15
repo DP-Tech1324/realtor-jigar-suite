@@ -5,14 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { 
-  Heart, 
-  Share2, 
-  MapPin, 
-  Bed, 
-  Bath, 
-  Square, 
-  Car, 
+import {
+  Heart,
+  Share2,
+  MapPin,
+  Bed,
+  Bath,
+  Square,
   Calendar,
   Phone,
   Mail,
@@ -20,12 +19,10 @@ import {
   ChevronRight,
   Maximize,
   X,
-  Download,
   Calculator,
-  TrendingUp,
-  Clock,
-  CheckCircle
+  Printer,
 } from "lucide-react";
+import ListingFacts, { type Fact } from "@/components/ListingFacts";
 import { useListing, listingImages, isLiveListingId } from "@/hooks/useListings";
 import { supabase } from "@/integrations/supabase/client";
 import VastuSection from "@/components/VastuSection";
@@ -56,6 +53,7 @@ const PropertyDetails = () => {
   const [showFullscreen, setShowFullscreen] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
   const [contactMessage, setContactMessage] = useState<string | undefined>();
+  const [contactTitle, setContactTitle] = useState('Contact Jigar');
 
   // Count one view per page load for the admin dashboard
   useEffect(() => {
@@ -135,8 +133,9 @@ const PropertyDetails = () => {
   const vastu = parseVastu(listing.vastu);
   const showVastu = !!vastu?.enabled && listing.vastu_score != null;
 
-  const openContact = (message?: string) => {
+  const openContact = (message?: string, title = 'Contact Jigar') => {
     setContactMessage(message);
+    setContactTitle(title);
     setShowContactForm(true);
   };
   
@@ -171,6 +170,14 @@ const PropertyDetails = () => {
     }
   };
 
+  const cityName = listing.city?.split('(')[0].trim();
+  const neighbourhood = listing.city?.match(/\(([^)]+)\)/)?.[1];
+  const summaryLine = [
+    listing.bedrooms ? `${listing.bedrooms} Beds` : null,
+    listing.bathrooms ? `${listing.bathrooms} Baths` : null,
+    listing.square_footage ? `${listing.square_footage.toLocaleString()} sqft` : null,
+  ].filter(Boolean).join(' · ');
+
   const features = [
     { icon: Bed, label: 'Bedrooms', value: listing.bedrooms },
     { icon: Bath, label: 'Bathrooms', value: listing.bathrooms },
@@ -178,138 +185,177 @@ const PropertyDetails = () => {
     { icon: Calendar, label: 'Year Built', value: listing.year_built },
   ].filter(feature => feature.value);
 
+  // What we hold for every listing; MLS® listings add CREA's full record (ListingFacts)
+  const basicFacts: Fact[] = [
+    { label: 'Property type', value: listing.property_type.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase()) },
+    { label: 'Bedrooms', value: listing.bedrooms },
+    { label: 'Bathrooms', value: listing.bathrooms },
+    { label: 'Interior size', value: listing.square_footage ? `${listing.square_footage.toLocaleString()} sqft` : null },
+    { label: 'Lot size', value: listing.lot_size ? `${listing.lot_size.toLocaleString()} sqft` : null },
+    { label: 'Year built', value: listing.year_built },
+    { label: 'Neighbourhood', value: neighbourhood },
+    { label: 'MLS® number', value: listing.mls_number },
+  ].filter((f) => f.value != null && f.value !== '').map((f) => ({ label: f.label, value: String(f.value) }));
+
+  const listingName = listing.mls_number ? `${listing.address}, ${cityName} (MLS® ${listing.mls_number})` : `${listing.address}, ${cityName}`;
+  const bookShowing = () => openContact(
+    `Hi Jigar, I'd like to book a showing of ${listingName}.\nPreferred date and time: `,
+    'Book a Showing',
+  );
+  const requestInfo = () => openContact(`Hi Jigar, please send me more information about ${listingName}.`, 'Request Information');
+
   return (
-    <div className="min-h-screen bg-white">
-      
+    <div className="min-h-screen bg-white pb-20 lg:pb-0">
+
       {/* Breadcrumb */}
-      <div className="bg-slate-50 border-b border-slate-200 py-4">
+      <div className="bg-slate-50 border-b border-slate-200 py-3 print:hidden">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center space-x-2 text-sm text-slate-600">
+          <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-x-2 text-sm text-slate-600">
             <Link to="/" className="hover:text-blue-600">Home</Link>
             <span>/</span>
-            <Link to="/search" className="hover:text-blue-600">Search</Link>
+            <Link to="/listings" className="hover:text-blue-600">Listings</Link>
+            {cityName && (
+              <>
+                <span>/</span>
+                <Link to={`/listings?location=${encodeURIComponent(cityName)}`} className="hover:text-blue-600">{cityName}</Link>
+              </>
+            )}
             <span>/</span>
-            <span className="text-slate-900 font-medium">Property Details</span>
-          </div>
+            <span className="text-slate-900 font-medium">{listing.address}</span>
+          </nav>
         </div>
       </div>
-      
-      {/* Image Gallery */}
-      <section className="relative">
-        <div className="h-64 md:h-96 lg:h-[500px] relative overflow-hidden bg-slate-100">
-          <img 
-            src={images[currentImageIndex]}
-            alt={listing.title}
-            className="w-full h-full object-cover"
-          />
-          
-          {/* Image Controls */}
-          {images.length > 1 && (
-            <>
-              <button 
-                onClick={prevImage}
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors"
-              >
-                <ChevronLeft className="h-6 w-6" />
-              </button>
-              <button 
-                onClick={nextImage}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors"
-              >
-                <ChevronRight className="h-6 w-6" />
-              </button>
-            </>
-          )}
-          
-          {/* Image Counter */}
-          <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm text-white px-4 py-2 rounded-lg">
-            <span className="font-medium">{currentImageIndex + 1} / {images.length}</span>
-          </div>
-          
-          {/* Action Buttons */}
-          <div className="absolute top-4 right-4 flex space-x-2">
-            {user && !listing.live && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-white/90 hover:bg-white backdrop-blur-sm"
-                onClick={handleFavoriteClick}
-              >
-                <Heart className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-slate-600'}`} />
-                <span className="ml-2 hidden sm:inline">{isFavorite ? 'Saved' : 'Save'}</span>
-              </Button>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-white/90 hover:bg-white backdrop-blur-sm"
-              onClick={() => setShowFullscreen(true)}
-            >
-              <Maximize className="h-4 w-4" />
-              <span className="ml-2 hidden sm:inline">Expand</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-white/90 hover:bg-white backdrop-blur-sm"
-              onClick={handleShare}
-            >
-              <Share2 className="h-4 w-4" />
-              <span className="ml-2 hidden sm:inline">Share</span>
-            </Button>
-          </div>
 
-          {/* Price Badge */}
-          <div className="absolute bottom-4 right-4">
-            <div className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-xl shadow-lg">
-              <div className="text-2xl md:text-3xl font-bold">
-                {formatListingPrice(listing)}
-              </div>
+      {/* Title: address, MLS®, price and actions */}
+      <section className="max-w-7xl mx-auto px-4 pt-6 pb-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <div className="flex flex-wrap gap-2 mb-3">
+              <Badge className="bg-blue-600 text-white">
+                {listing.property_type.replace('_', ' ').toUpperCase()}
+              </Badge>
+              {isRental(listing) && listing.status !== 'sold' && <Badge className="bg-emerald-600 text-white">FOR RENT</Badge>}
+              {listing.is_own_listing && <Badge className="bg-slate-900 text-white">JIGAR'S LISTING</Badge>}
+              {listing.status === 'pending' && <Badge className="bg-amber-500 text-white">PENDING</Badge>}
+              {listing.status === 'sold' && <Badge className="bg-slate-700 text-white">{listing.transaction_type === 'rent' ? 'LEASED' : 'SOLD'}</Badge>}
+              {showVastu && (
+                <a href="#vastu">
+                  <Badge className="bg-green-100 text-green-800 hover:bg-green-200 border border-green-300">
+                    {listing.facing ? `${listing.facing}-facing · ` : ''}Vastu {listing.vastu_score}/10
+                  </Badge>
+                </a>
+              )}
+            </div>
+            <h1 className="text-2xl md:text-4xl font-bold text-slate-900">{listing.address}</h1>
+            <div className="flex items-center text-slate-600 mt-2">
+              <MapPin className="h-5 w-5 mr-2 text-blue-600 shrink-0" />
+              <span className="text-lg">{[listing.city, listing.province, listing.postal_code].filter(Boolean).join(', ')}</span>
+            </div>
+            {listing.mls_number && <div className="text-sm text-slate-500 mt-1">MLS® # {listing.mls_number}</div>}
+          </div>
+          <div className="md:text-right">
+            <div className="text-3xl md:text-4xl font-bold text-slate-900">{formatListingPrice(listing)}</div>
+            {summaryLine && <div className="text-slate-600 mt-1">{summaryLine}</div>}
+            <div className="flex md:justify-end gap-2 mt-3 print:hidden">
+              {user && !listing.live && (
+                <Button variant="outline" size="sm" onClick={handleFavoriteClick}>
+                  <Heart className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-slate-600'}`} />
+                  <span className="ml-2">{isFavorite ? 'Saved' : 'Save'}</span>
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={handleShare}>
+                <Share2 className="h-4 w-4" />
+                <span className="ml-2">Share</span>
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => window.print()}>
+                <Printer className="h-4 w-4" />
+                <span className="ml-2">Print</span>
+              </Button>
             </div>
           </div>
         </div>
       </section>
 
+      {/* Image Gallery */}
+      <section className="max-w-7xl mx-auto px-4">
+        <div className="h-64 md:h-96 lg:h-[520px] relative overflow-hidden bg-slate-100 rounded-2xl">
+          <img
+            src={images[currentImageIndex]}
+            alt={`${listing.address}, photo ${currentImageIndex + 1}`}
+            className="w-full h-full object-cover"
+          />
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={prevImage}
+                aria-label="Previous photo"
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors print:hidden"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+              <button
+                onClick={nextImage}
+                aria-label="Next photo"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors print:hidden"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            </>
+          )}
+          <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm text-white px-4 py-2 rounded-lg">
+            <span className="font-medium">{currentImageIndex + 1} / {images.length}</span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="absolute top-4 right-4 bg-white/90 hover:bg-white backdrop-blur-sm print:hidden"
+            onClick={() => setShowFullscreen(true)}
+          >
+            <Maximize className="h-4 w-4" />
+            <span className="ml-2 hidden sm:inline">Expand</span>
+          </Button>
+        </div>
+        {images.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto py-3 print:hidden">
+            {images.map((src, i) => (
+              <button
+                key={src}
+                onClick={() => setCurrentImageIndex(i)}
+                aria-label={`Show photo ${i + 1}`}
+                className={`shrink-0 h-16 w-24 rounded-lg overflow-hidden border-2 ${i === currentImageIndex ? 'border-blue-600' : 'border-transparent opacity-80 hover:opacity-100'}`}
+              >
+                <img src={src} alt="" loading="lazy" className="h-full w-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Calls to action under the photos */}
+        <div className="flex flex-wrap gap-3 py-4 print:hidden">
+          <Button onClick={bookShowing} className="bg-blue-600 hover:bg-blue-700">
+            <Calendar className="h-4 w-4 mr-2" /> Book a Showing
+          </Button>
+          <Button variant="outline" onClick={requestInfo}>
+            <Mail className="h-4 w-4 mr-2" /> Request Information
+          </Button>
+          <Button asChild variant="outline">
+            <a href="tel:+16478015448"><Phone className="h-4 w-4 mr-2" /> (647) 801-5448</a>
+          </Button>
+        </div>
+      </section>
+
       {/* Property Details */}
-      <section className="py-8 md:py-12">
+      <section className="py-6 md:py-8">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-8">
-              {/* Header */}
-              <div className="animate-fade-in">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                  <div className="flex-1">
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      <Badge className="bg-blue-600 text-white">
-                        {listing.property_type.replace('_', ' ').toUpperCase()}
-                      </Badge>
-                      {isRental(listing) && listing.status !== 'sold' && <Badge className="bg-emerald-600 text-white">FOR RENT</Badge>}
-                      {listing.status === 'pending' && <Badge className="bg-amber-500 text-white">PENDING</Badge>}
-                      {listing.status === 'sold' && <Badge className="bg-slate-700 text-white">{listing.transaction_type === 'rent' ? 'LEASED' : 'SOLD'}</Badge>}
-                      {showVastu && (
-                        <a href="#vastu">
-                          <Badge className="bg-green-100 text-green-800 hover:bg-green-200 border border-green-300">
-                            {listing.facing ? `${listing.facing}-facing · ` : ''}Vastu {listing.vastu_score}/10
-                          </Badge>
-                        </a>
-                      )}
-                    </div>
-                    <h1 className="text-2xl md:text-4xl font-bold text-slate-900 mb-3">
-                      {listing.title}
-                    </h1>
-                    <div className="flex items-center text-slate-600 mb-4">
-                      <MapPin className="h-5 w-5 mr-2 text-blue-600" />
-                      <span className="text-lg">{listing.address}, {listing.city}, {listing.province}</span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Key Features */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              {/* Key Features */}
+              {features.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {features.map((feature, index) => (
-                    <div key={index} className="bg-slate-50 rounded-2xl p-6 text-center">
-                      <feature.icon className="h-6 w-6 text-blue-600 mx-auto mb-3" />
+                    <div key={index} className="bg-slate-50 rounded-2xl p-5 text-center">
+                      <feature.icon className="h-6 w-6 text-blue-600 mx-auto mb-2" />
                       <div className="text-2xl font-bold text-slate-900 mb-1">
                         {typeof feature.value === 'number' ? feature.value.toLocaleString() : feature.value}
                       </div>
@@ -317,65 +363,22 @@ const PropertyDetails = () => {
                     </div>
                   ))}
                 </div>
-              </div>
-
-              <Separator />
+              )}
 
               {/* Description */}
-              <div className="animate-fade-in">
-                <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">Property Description</h2>
-                <div className="prose prose-lg max-w-none text-slate-700 leading-relaxed">
-                  <p>
-                    {listing.description || `This exceptional ${listing.property_type.replace('_', ' ')} property offers modern living in one of the GTA's most desirable locations. With ${listing.bedrooms} bedrooms and ${listing.bathrooms} bathrooms across ${listing.square_footage} square feet, this home provides comfortable living space for the whole family.`}
-                  </p>
-                  <p>
-                    Located in the heart of {listing.city}, you'll enjoy easy access to top-rated schools, shopping centers, public transportation, and recreational facilities. This property represents an excellent opportunity for both families and investors looking for quality real estate in the Greater Toronto Area.
-                  </p>
-                  <p>
-                    Contact Jigar Patel today to schedule a private viewing and discover everything this property has to offer. With extensive knowledge of the local market and a commitment to client satisfaction, Jigar will guide you through every step of the buying process.
-                  </p>
-                </div>
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">About This Property</h2>
+                <p className="text-lg text-slate-700 leading-relaxed whitespace-pre-line">
+                  {listing.description || `Contact Jigar Patel for full details on ${listing.address}, ${cityName}.`}
+                </p>
               </div>
 
               <Separator />
 
-              {/* Property Details */}
-              <div className="animate-fade-in">
+              <div>
                 <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">Property Details</h2>
-                <div className="bg-slate-50 rounded-2xl p-6 md:p-8">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {[
-                      { label: 'Property Type', value: listing.property_type.replace('_', ' ').toUpperCase() },
-                      { label: 'Bedrooms', value: listing.bedrooms },
-                      { label: 'Bathrooms', value: listing.bathrooms },
-                      { label: 'Square Footage', value: listing.square_footage ? `${listing.square_footage.toLocaleString()} sqft` : 'N/A' },
-                      { label: 'Year Built', value: listing.year_built || 'N/A' },
-                      { label: 'Lot Size', value: listing.lot_size ? `${listing.lot_size.toLocaleString()} sqft` : 'N/A' },
-                      { label: 'MLS Number', value: listing.mls_number || 'Contact for details' },
-                      { label: 'City', value: listing.city },
-                      { label: 'Province', value: listing.province },
-                      { label: 'Postal Code', value: 'Contact for details' },
-                    ].map((detail, index) => (
-                      <div key={index} className="flex justify-between items-center py-3 border-b border-slate-200 last:border-b-0">
-                        <span className="font-medium text-slate-700">{detail.label}:</span>
-                        <span className="text-slate-900 font-semibold">{detail.value || 'N/A'}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <ListingFacts listing={listing} basic={basicFacts} />
               </div>
-
-              <DdfDetailCredit listing={listing} />
-
-              {listing.province && listing.province !== 'ON' && (
-                <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 text-slate-800">
-                  <div className="font-semibold text-slate-900 mb-1">Buying outside Ontario?</div>
-                  <p className="text-sm">
-                    Jigar will connect you with a trusted local REALTOR® in {listing.city} and stay with you through the purchase.
-                    Use "Schedule Viewing" or call to get started.
-                  </p>
-                </div>
-              )}
 
               <Separator />
               {showVastu ? (
@@ -396,38 +399,18 @@ const PropertyDetails = () => {
                   )}
                 />
               )}
-              <Separator />
 
-              {/* Market Insights */}
-              <div className="animate-fade-in">
-                <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">Market Insights</h2>
-                <div className="grid md:grid-cols-3 gap-6">
-                  <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-                    <CardContent className="p-6 text-center">
-                      <TrendingUp className="h-8 w-8 text-blue-600 mx-auto mb-4" />
-                      <div className="text-2xl font-bold text-blue-900 mb-2">+8.5%</div>
-                      <div className="text-blue-700 font-medium">Area Appreciation</div>
-                      <div className="text-sm text-blue-600 mt-1">Last 12 months</div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-                    <CardContent className="p-6 text-center">
-                      <Clock className="h-8 w-8 text-green-600 mx-auto mb-4" />
-                      <div className="text-2xl font-bold text-green-900 mb-2">18 days</div>
-                      <div className="text-green-700 font-medium">Avg. Days on Market</div>
-                      <div className="text-sm text-green-600 mt-1">In this area</div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
-                    <CardContent className="p-6 text-center">
-                      <CheckCircle className="h-8 w-8 text-yellow-600 mx-auto mb-4" />
-                      <div className="text-2xl font-bold text-yellow-900 mb-2">95%</div>
-                      <div className="text-yellow-700 font-medium">Sale to List Ratio</div>
-                      <div className="text-sm text-yellow-600 mt-1">Recent sales</div>
-                    </CardContent>
-                  </Card>
+              {listing.province && listing.province !== 'ON' && (
+                <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 text-slate-800">
+                  <div className="font-semibold text-slate-900 mb-1">Buying outside Ontario?</div>
+                  <p className="text-sm">
+                    Jigar will connect you with a trusted local REALTOR® in {listing.city} and stay with you through the purchase.
+                    Use "Book a Showing" or call to get started.
+                  </p>
                 </div>
-              </div>
+              )}
+
+              <DdfDetailCredit listing={listing} />
             </div>
 
             {/* Sidebar */}
@@ -448,14 +431,7 @@ const PropertyDetails = () => {
                          />
                     <h3 className="text-2xl font-bold text-slate-900 mb-2">Jigar Patel</h3>
                     <p className="text-slate-600 mb-2">Licensed Real Estate Professional</p>
-                    <div className="flex items-center justify-center text-yellow-500 mb-4">
-                      {[1, 2, 3, 4, 5].map(star => (
-                        <svg key={star} className="h-4 w-4 fill-current" viewBox="0 0 20 20">
-                          <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
-                        </svg>
-                      ))}
-                      <span className="ml-2 text-slate-600 text-sm">(127 reviews)</span>
-                    </div>
+                    <p className="text-sm text-slate-500 mb-4">Royal LePage Terra Realty, Brokerage</p>
                   </div>
                   
                   <div className="space-y-4 mb-8">
@@ -482,38 +458,21 @@ const PropertyDetails = () => {
                         Send Email
                       </a>
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="w-full text-lg py-3"
-                      onClick={() => openContact()}
+                      onClick={bookShowing}
                     >
                       <Calendar className="h-5 w-5 mr-2" />
-                      Schedule Viewing
+                      Book a Showing
                     </Button>
                   </div>
 
-                  {/* Agent stats */}
-                  <div className="mt-8 pt-6 border-t border-slate-200">
-                    <div className="grid grid-cols-3 gap-4 text-center">
-                      <div>
-                        <div className="text-2xl font-bold text-slate-900">500+</div>
-                        <div className="text-xs text-slate-600">Homes Sold</div>
-                      </div>
-                      <div>
-                        <div className="text-2xl font-bold text-slate-900">5+</div>
-                        <div className="text-xs text-slate-600">Years Exp.</div>
-                      </div>
-                      <div>
-                        <div className="text-2xl font-bold text-slate-900">5.0</div>
-                        <div className="text-xs text-slate-600">Rating</div>
-                      </div>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
 
               {/* Mortgage Calculator Card */}
-              <Card className="shadow-lg animate-fade-in">
+              {!isRental(listing) && <Card className="shadow-lg animate-fade-in print:hidden">
                 <CardContent className="p-6">
                   <h3 className="text-xl font-bold text-slate-900 mb-4 flex items-center">
                     <Calculator className="h-5 w-5 mr-2 text-blue-600" />
@@ -530,7 +489,7 @@ const PropertyDetails = () => {
                     Calculate Payments
                   </Button>
                 </CardContent>
-              </Card>
+              </Card>}
 
               {/* Property Download */}
              {/* <Card className="shadow-lg animate-fade-in">
@@ -552,13 +511,58 @@ const PropertyDetails = () => {
         </div>
       </section>
 
+      {/* Full-screen photos */}
+      {showFullscreen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Photos"
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setShowFullscreen(false);
+            if (e.key === 'ArrowRight') nextImage();
+            if (e.key === 'ArrowLeft') prevImage();
+          }}
+          tabIndex={-1}
+          ref={(el) => el?.focus()}
+        >
+          <img src={images[currentImageIndex]} alt={`${listing.address}, photo ${currentImageIndex + 1}`} className="max-h-full max-w-full object-contain" />
+          <button onClick={() => setShowFullscreen(false)} aria-label="Close photos" className="absolute top-4 right-4 text-white bg-white/10 hover:bg-white/20 p-3 rounded-full">
+            <X className="h-6 w-6" />
+          </button>
+          {images.length > 1 && (
+            <>
+              <button onClick={prevImage} aria-label="Previous photo" className="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-white/10 hover:bg-white/20 p-3 rounded-full">
+                <ChevronLeft className="h-7 w-7" />
+              </button>
+              <button onClick={nextImage} aria-label="Next photo" className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-white/10 hover:bg-white/20 p-3 rounded-full">
+                <ChevronRight className="h-7 w-7" />
+              </button>
+            </>
+          )}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/90 text-sm">{currentImageIndex + 1} / {images.length}</div>
+        </div>
+      )}
+
+      {/* Sticky bar on phones: price and the two main actions always in reach */}
+      <div className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-white border-t border-slate-200 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] print:hidden">
+        <div className="flex items-center gap-2 px-4 py-3">
+          <div className="flex-1 min-w-0">
+            <div className="font-bold text-slate-900 truncate">{formatListingPrice(listing)}</div>
+            <div className="text-xs text-slate-500 truncate">{listing.address}</div>
+          </div>
+          <Button size="sm" variant="outline" onClick={requestInfo}>Info</Button>
+          <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={bookShowing}>Book a Showing</Button>
+        </div>
+      </div>
+
       {/* Contact Form Modal */}
       {showContactForm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-bold text-slate-900">Schedule Viewing</h3>
+                <h3 className="text-2xl font-bold text-slate-900">{contactTitle}</h3>
                 <Button 
                   variant="ghost" 
                   size="sm"

@@ -83,7 +83,7 @@ const Footer = () => {
             <div className="space-y-2">
               <div className="flex items-center">
                 <Phone className="h-5 w-5 mr-3 text-blue-400" />
-                <span className="text-base">(416) 555-0123</span>
+                <a href="tel:+16478015448" className="text-base hover:text-blue-300">(647) 801-5448</a>
               </div>
               <div className="flex items-center">
                 <Mail className="h-5 w-5 mr-3 text-blue-400" />

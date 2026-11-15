@@ -3,10 +3,11 @@
 //
 //   GET /api/ddf-search?city=Calgary&province=AB&minPrice=&maxPrice=&bedrooms=&bathrooms=&saleType=sale&page=0
 //   GET /api/ddf-search?key=<ListingKey>        one listing, for its property page
+//   GET /api/ddf-search?details=<ListingKey>    full facts and rooms for any MLS® listing's page
 //
 // Env: DDF_CLIENT_ID, DDF_CLIENT_SECRET
 
-import { PROVINCE_NAMES, ddfGet, getToken, lookupOffices, odataString, propertyUrl, toRow } from './_lib/ddf.js';
+import { PROVINCE_NAMES, ddfGet, getToken, lookupOffices, odataString, propertyUrl, toDetails, toRow } from './_lib/ddf.js';
 
 const PAGE_SIZE = 24;
 const offices = new Map(); // brokerage names, kept while the function instance is warm
@@ -61,6 +62,13 @@ export default async function handler(req, res) {
   try {
     const q = req.query || {};
     const token = await getToken();
+
+    if (q.details) {
+      const page = await ddfGet(token, propertyUrl({ filter: `ListingKey eq ${odataString(q.details)}`, top: 1 }));
+      if (!page.value?.[0]) return res.status(404).json({ error: 'This listing is no longer available.' });
+      res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+      return res.status(200).json({ details: toDetails(page.value[0]) });
+    }
 
     let filter;
     let top = PAGE_SIZE;
