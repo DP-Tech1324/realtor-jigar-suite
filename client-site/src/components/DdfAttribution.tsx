@@ -2,8 +2,8 @@ import React from 'react';
 import type { Listing } from '@/hooks/useListings';
 
 // CREA DDF® display rules: show the listing brokerage and carry the trademark notice wherever
-// MLS® listing data appears. No link out to REALTOR.ca: leads stay with Jigar on this site, so
-// other brokerages' listings read "Presented by Jigar Patel" with the listing brokerage named.
+// MLS® listing data appears. "Powered by REALTOR.ca" is plain text, not a link out: leads stay
+// with Jigar on this site, so other brokerages' listings read "Presented by Jigar Patel".
 
 export const isDdf = (listing: Pick<Listing, 'source'>) => listing.source === 'ddf';
 
@@ -33,6 +33,7 @@ export const DdfDetailCredit: React.FC<{ listing: Listing }> = ({ listing }) => 
         </div>
         {!listing.is_own_listing && <div>Listed by {listing.list_office_name || 'a CREA member brokerage'}</div>}
         {listing.mls_number && <div>MLS® Number: {listing.mls_number}</div>}
+        <div className="text-slate-500">Powered by REALTOR.ca</div>
       </div>
       <p className="text-xs text-slate-500 leading-relaxed">{DDF_TRADEMARK_NOTICE}</p>
     </div>
