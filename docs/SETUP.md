@@ -76,8 +76,10 @@ from them reach Jigar with the MLS® number in the message, for a referral to a 
 4. Deploy, then Admin → Properties → MLS® Feed → "Find Jigar's agent key" → set `DDF_AGENT_KEYS` → redeploy →
    **Sync now** (let it run until it says the sync is complete).
 
-Every MLS® listing shows the listing brokerage, MLS® number, a "View on REALTOR.ca" link and CREA's trademark
-notice (`client-site/src/components/DdfAttribution.tsx`).
+Every MLS® listing shows "Presented by Jigar Patel" and "Powered by REALTOR.ca" (text, not a link) with the listing brokerage, MLS® number and CREA's trademark
+notice (`client-site/src/components/DdfAttribution.tsx`). There is no link out to REALTOR.ca, so leads stay on this
+site. The homepage featured section shows Jigar's own listings (needs `DDF_AGENT_KEYS`) and any he marks featured
+in the admin; until there are any, it shows the newest Ontario homes under "New on the Market".
 
 ## How Vastu works
 
@@ -87,6 +89,24 @@ notice (`client-site/src/components/DdfAttribution.tsx`).
   It needs at least 3 filled-in items.
 - On the website, the listing gets a Vastu badge, a Vastu section on its page, and appears in the
   "Facing" and "Vastu-friendly homes only (score 7+)" search filters.
+
+## Vastu for MLS® listings (AI estimate)
+
+CREA's feed has no room layout, so MLS® listings get Vastu on demand.
+
+**Scope (Nov 2026): Ontario residential only** (single_family, townhouse, condo, multi_family). Not yet included:
+commercial and land (no Vastu section shown), and homes outside Ontario (request button only). To widen, update
+`SCOPE_*` in `client-site/api/vastu-check.js`, `VASTU_AI_SCOPE` in `client-site/src/lib/vastuScope.ts`, and the
+comment on `public.listing_vastu_ai` (`supabase/migrations/20261115000000_vastu_ai_scope_note.sql`).
+
+- Listings where Jigar entered Vastu details show them, marked "Verified by Jigar".
+- Every other Ontario MLS® listing shows **Check Vastu (AI)**: `client-site/api/vastu-check.js` downloads the listing
+  photos, Claude finds the floor plan and fills the 9 zones and facing, and the page shows the grid, score and
+  checklist marked "AI estimate · confirm with Jigar". Results are saved in `listing_vastu_ai` (one per listing).
+- No usable floor plan, or a listing outside Ontario: **Request a Vastu report from Jigar** sends him an inquiry.
+- Cost control: `VASTU_DAILY_LIMIT` new analyses per day (default 150) and 6 per visitor per hour. Website project
+  needs `ANTHROPIC_API_KEY` and `SERVICE_ROLE_KEY`.
+- The Vastu search filter only uses verified scores.
 
 ## AI features (Claude)
 

@@ -9,7 +9,8 @@ import { useNavigate } from "react-router-dom";
 
 const FeaturedListings = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const { data: listings, isLoading, error } = useFeaturedListings();
+  const { data, isLoading, error } = useFeaturedListings();
+  const listings = data?.listings;
   const navigate = useNavigate();
 
   const nextSlide = () => {
@@ -61,15 +62,18 @@ const FeaturedListings = () => {
         <div className="text-center mb-16 animate-fade-in">
           <div className="flex items-center justify-center mb-4">
             <div className="w-1 h-12 bg-gradient-to-b from-blue-600 to-yellow-500 rounded-full mr-4"></div>
-            <span className="text-blue-600 font-semibold text-lg uppercase tracking-wide">Featured Properties</span>
+            <span className="text-blue-600 font-semibold text-lg uppercase tracking-wide">
+              {data && !data.curated ? "New on the Market" : "Featured Properties"}
+            </span>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
             Discover Your
             <span className="block text-blue-600">Perfect Home</span>
           </h2>
           <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-            Explore our carefully curated selection of premium properties in the Greater Toronto Area. 
-            Each home has been chosen for its exceptional value, location, and potential.
+            {data && !data.curated
+              ? "The newest homes for sale across Ontario. Book a showing with Jigar for any of them."
+              : "Jigar Patel's own listings and hand-picked homes across the Greater Toronto Area."}
           </p>
         </div>
 
