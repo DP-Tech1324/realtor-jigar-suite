@@ -129,7 +129,7 @@ const Header = () => {
           <div className="flex items-center space-x-6">
             <div className="flex items-center space-x-2">
               <Phone className="h-4 w-4" />
-              <span>(416) 555-0123</span>
+              <a href="tel:+16478015448" className="hover:underline">(647) 801-5448</a>
             </div>
             <div className="hidden md:flex items-center space-x-2">
               <Mail className="h-4 w-4" />

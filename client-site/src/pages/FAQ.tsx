@@ -264,8 +264,8 @@ const FAQ = () => {
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 mb-4">Call Me</h3>
                 <p className="text-slate-600 mb-6">Speak directly with Jigar for immediate answers</p>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                  (416) 555-0123
+                <Button asChild className="w-full bg-blue-600 hover:bg-blue-700">
+                  <a href="tel:+16478015448">(647) 801-5448</a>
                 </Button>
               </CardContent>
             </Card>

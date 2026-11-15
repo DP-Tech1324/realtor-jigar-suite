@@ -431,14 +431,7 @@ const PropertyDetails = () => {
                          />
                     <h3 className="text-2xl font-bold text-slate-900 mb-2">Jigar Patel</h3>
                     <p className="text-slate-600 mb-2">Licensed Real Estate Professional</p>
-                    <div className="flex items-center justify-center text-yellow-500 mb-4">
-                      {[1, 2, 3, 4, 5].map(star => (
-                        <svg key={star} className="h-4 w-4 fill-current" viewBox="0 0 20 20">
-                          <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
-                        </svg>
-                      ))}
-                      <span className="ml-2 text-slate-600 text-sm">(127 reviews)</span>
-                    </div>
+                    <p className="text-sm text-slate-500 mb-4">Royal LePage Terra Realty, Brokerage</p>
                   </div>
                   
                   <div className="space-y-4 mb-8">
@@ -475,23 +468,6 @@ const PropertyDetails = () => {
                     </Button>
                   </div>
 
-                  {/* Agent stats */}
-                  <div className="mt-8 pt-6 border-t border-slate-200">
-                    <div className="grid grid-cols-3 gap-4 text-center">
-                      <div>
-                        <div className="text-2xl font-bold text-slate-900">500+</div>
-                        <div className="text-xs text-slate-600">Homes Sold</div>
-                      </div>
-                      <div>
-                        <div className="text-2xl font-bold text-slate-900">5+</div>
-                        <div className="text-xs text-slate-600">Years Exp.</div>
-                      </div>
-                      <div>
-                        <div className="text-2xl font-bold text-slate-900">5.0</div>
-                        <div className="text-xs text-slate-600">Rating</div>
-                      </div>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
 
