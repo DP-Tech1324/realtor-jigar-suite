@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import VastuSection from '@/components/VastuSection';
 import { supabase } from '@/integrations/supabase/client';
 import { evaluateVastu, type Direction, type VastuData } from '@/lib/vastu';
+import { isVastuAiEligible, isVastuResidential } from '@/lib/vastuScope';
 
 interface Estimate {
   floor_plan_found: boolean;
@@ -15,20 +16,24 @@ interface Estimate {
 
 interface VastuCheckProps {
   listingId: string;
+  propertyType?: string | null;
+  province?: string | null;
   live?: boolean; // live CREA listing outside Ontario: not stored, so only the request option
   onRequest: () => void;
 }
 
 // Vastu for MLS® listings without details from Jigar: an on-demand AI estimate from the
 // listing's floor plan (cached per listing), or a request for a Vastu report.
-const VastuCheck: React.FC<VastuCheckProps> = ({ listingId, live, onRequest }) => {
+const VastuCheck: React.FC<VastuCheckProps> = ({ listingId, propertyType, province, live, onRequest }) => {
+  // AI check: Ontario homes only (lib/vastuScope.ts). Other homes get the report request.
+  const aiEligible = isVastuAiEligible({ property_type: propertyType, province, live });
   const [estimate, setEstimate] = useState<Estimate | null>(null);
-  const [loading, setLoading] = useState(!live);
+  const [loading, setLoading] = useState(aiEligible);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (live) return;
+    if (!aiEligible) return;
     let cancelled = false;
     supabase.from('listing_vastu_ai').select('*').eq('listing_id', listingId).maybeSingle().then(({ data }) => {
       if (!cancelled) {
@@ -39,7 +44,7 @@ const VastuCheck: React.FC<VastuCheckProps> = ({ listingId, live, onRequest }) =
     return () => {
       cancelled = true;
     };
-  }, [listingId, live]);
+  }, [listingId, aiEligible]);
 
   const runCheck = async () => {
     setChecking(true);
@@ -60,6 +65,8 @@ const VastuCheck: React.FC<VastuCheckProps> = ({ listingId, live, onRequest }) =
     }
   };
 
+  // Commercial and land: no residential room layout, so no Vastu section for now
+  if (!isVastuResidential(propertyType)) return null;
   if (loading) return null;
 
   const vastu: VastuData | null = estimate?.floor_plan_found ? { enabled: true, zones: estimate.zones || {} } : null;
@@ -88,7 +95,7 @@ const VastuCheck: React.FC<VastuCheckProps> = ({ listingId, live, onRequest }) =
             {estimate.facing ? ` The main entrance appears to face ${estimate.facing}.` : ''}
             {estimate.notes ? ` ${estimate.notes}` : ''}
           </p>
-        ) : live ? (
+        ) : !aiEligible ? (
           <p className="text-slate-700">
             Want to know how this home lines up with Vastu Shastra? Jigar can review the floor plan and send you a Vastu report.
           </p>
@@ -100,7 +107,7 @@ const VastuCheck: React.FC<VastuCheckProps> = ({ listingId, live, onRequest }) =
         )}
         {error && <p className="text-sm text-red-700">{error}</p>}
         <div className="flex flex-wrap gap-3">
-          {!estimate && !live && (
+          {!estimate && aiEligible && (
             <Button onClick={runCheck} disabled={checking} className="bg-blue-600 hover:bg-blue-700">
               {checking ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
               {checking ? 'Reading the floor plan…' : 'Check Vastu (AI)'}

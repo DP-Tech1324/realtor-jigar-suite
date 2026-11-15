@@ -20,6 +20,11 @@ const ROOMS = [
 ];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// Scope, kept in step with client-site/src/lib/vastuScope.ts and the table comment:
+// Ontario residential homes only for now. Widen these lists to add more.
+const SCOPE_PROVINCES = ['ON'];
+const SCOPE_TYPES = ['single_family', 'townhouse', 'condo', 'multi_family'];
+
 const client = new Anthropic();
 const db = () => createClient(
   process.env.VITE_SUPABASE_URL,
@@ -130,10 +135,13 @@ export default async function handler(req, res) {
 
     const { data: listing, error } = await supabase
       .from('listings')
-      .select('id,title,address,city,description,images,cover_image,status')
+      .select('id,title,address,city,province,property_type,description,images,cover_image,status')
       .eq('id', listingId)
       .maybeSingle();
     if (error || !listing || listing.status === 'draft') return res.status(404).json({ error: 'Listing not found.' });
+    if (!SCOPE_PROVINCES.includes(listing.province) || !SCOPE_TYPES.includes(listing.property_type)) {
+      return res.status(422).json({ error: 'AI Vastu checks currently cover Ontario homes only. Request a Vastu report from Jigar instead.' });
+    }
 
     const urls = [...new Set([listing.cover_image, ...(listing.images || [])].filter(Boolean))];
     const photos = await loadPhotos(urls);

@@ -394,6 +394,8 @@ const PropertyDetails = () => {
                 // MLS® listings without Jigar's details: AI estimate from the floor plan, or a report request
                 <VastuCheck
                   listingId={listing.id}
+                  propertyType={listing.property_type}
+                  province={listing.province}
                   live={listing.live}
                   onRequest={() => openContact(
                     `Hi Jigar, please prepare a Vastu report for "${listing.title}"${listing.mls_number ? ` (MLS® ${listing.mls_number})` : ''}, ${listing.address}, ${listing.city}.`,

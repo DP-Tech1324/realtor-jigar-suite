@@ -90,7 +90,13 @@ notice (`client-site/src/components/DdfAttribution.tsx`).
 
 ## Vastu for MLS® listings (AI estimate)
 
-CREA's feed has no room layout, so MLS® listings get Vastu on demand:
+CREA's feed has no room layout, so MLS® listings get Vastu on demand.
+
+**Scope (Nov 2026): Ontario residential only** (single_family, townhouse, condo, multi_family). Not yet included:
+commercial and land (no Vastu section shown), and homes outside Ontario (request button only). To widen, update
+`SCOPE_*` in `client-site/api/vastu-check.js`, `VASTU_AI_SCOPE` in `client-site/src/lib/vastuScope.ts`, and the
+comment on `public.listing_vastu_ai` (`supabase/migrations/20261115000000_vastu_ai_scope_note.sql`).
+
 - Listings where Jigar entered Vastu details show them, marked "Verified by Jigar".
 - Every other Ontario MLS® listing shows **Check Vastu (AI)**: `client-site/api/vastu-check.js` downloads the listing
   photos, Claude finds the floor plan and fills the 9 zones and facing, and the page shows the grid, score and
