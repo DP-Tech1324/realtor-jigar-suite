@@ -1,6 +1,7 @@
 import {
   X, Share2, Heart, Printer, Maximize, Phone, Mail, MapPin
 } from "lucide-react";
+import { formatListingPrice } from "@/lib/price";
 
 export default function PropertyDetailsModal({ listing, onClose }: { listing: any, onClose: () => void }) {
   // Example images (replace with listing.images if available)
@@ -38,7 +39,7 @@ export default function PropertyDetailsModal({ listing, onClose }: { listing: an
         </div>
         {/* Main Info */}
         <div className="p-6">
-          <div className="text-2xl font-bold text-blue-700 mb-2">{listing.price && `$${Number(listing.price).toLocaleString()}`}</div>
+          <div className="text-2xl font-bold text-blue-700 mb-2">{formatListingPrice(listing)}</div>
           <div className="text-lg font-semibold text-slate-800 mb-1">{listing.title}</div>
           <div className="text-slate-600 mb-2 flex items-center gap-2">
             <MapPin className="w-5 h-5 text-blue-600" />
