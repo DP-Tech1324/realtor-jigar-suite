@@ -76,8 +76,10 @@ from them reach Jigar with the MLS® number in the message, for a referral to a 
 4. Deploy, then Admin → Properties → MLS® Feed → "Find Jigar's agent key" → set `DDF_AGENT_KEYS` → redeploy →
    **Sync now** (let it run until it says the sync is complete).
 
-Every MLS® listing shows the listing brokerage, MLS® number, a "View on REALTOR.ca" link and CREA's trademark
-notice (`client-site/src/components/DdfAttribution.tsx`).
+Every MLS® listing shows "Presented by Jigar Patel" with the listing brokerage, MLS® number and CREA's trademark
+notice (`client-site/src/components/DdfAttribution.tsx`). There is no link out to REALTOR.ca, so leads stay on this
+site. The homepage featured section shows Jigar's own listings (needs `DDF_AGENT_KEYS`) and any he marks featured
+in the admin; until there are any, it shows the newest Ontario homes under "New on the Market".
 
 ## How Vastu works
 

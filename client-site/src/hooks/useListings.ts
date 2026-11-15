@@ -106,6 +106,8 @@ export const useListings = (filters?: SearchFilters) => {
   });
 };
 
+// Homepage featured section: Jigar's own listings first, then ones he marks featured in the
+// admin. Until any exist, the newest Ontario homes fill the section (curated = false).
 export const useFeaturedListings = () => {
   return useQuery({
     queryKey: ['featured-listings'],
@@ -114,12 +116,23 @@ export const useFeaturedListings = () => {
         .from('listings_public')
         .select('*')
         .eq('status', 'active')
-        .eq('is_featured', true)
+        .or('is_own_listing.eq.true,is_featured.eq.true')
+        .order('is_own_listing', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(9);
+      if (error) throw error;
+      if (data && data.length > 0) return { listings: data as Listing[], curated: true };
+
+      const latest = await supabase
+        .from('listings_public')
+        .select('*')
+        .eq('status', 'active')
+        .eq('province', 'ON')
+        .neq('property_type', 'commercial')
         .order('created_at', { ascending: false })
         .limit(6);
-
-      if (error) throw error;
-      return data as Listing[];
+      if (latest.error) throw latest.error;
+      return { listings: (latest.data || []) as Listing[], curated: false };
     },
   });
 };
