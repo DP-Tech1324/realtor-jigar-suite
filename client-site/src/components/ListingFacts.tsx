@@ -43,10 +43,16 @@ const FactGroup: React.FC<{ title: string; facts: Fact[] }> = ({ title, facts })
   );
 };
 
+const LEVEL_ORDER = ['main', 'ground', 'second', 'upper', 'third', 'fourth', 'lower', 'basement', 'sub-basement'];
+const levelRank = (level: string) => {
+  const i = LEVEL_ORDER.findIndex((w) => level.toLowerCase().includes(w));
+  return i === -1 ? LEVEL_ORDER.length : i;
+};
+
 const RoomsTable: React.FC<{ rooms: Room[] }> = ({ rooms }) => {
   const [unit, setUnit] = useState<'metric' | 'imperial'>('imperial');
   if (!rooms.length) return null;
-  // Group by level, keeping CREA's order
+  // Group by level: upper floors in order, then basement and anything else
   const levels: [string, Room[]][] = [];
   rooms.forEach((r) => {
     const level = r.level || 'Other';
@@ -54,6 +60,8 @@ const RoomsTable: React.FC<{ rooms: Room[] }> = ({ rooms }) => {
     if (group) group[1].push(r);
     else levels.push([level, [r]]);
   });
+  levels.sort(([a], [b]) => levelRank(a) - levelRank(b));
+  const hasFeatures = rooms.some((r) => r.description);
 
   return (
     <section>
@@ -79,7 +87,7 @@ const RoomsTable: React.FC<{ rooms: Room[] }> = ({ rooms }) => {
             <tr>
               <th className="text-left font-medium px-4 py-2">Room</th>
               <th className="text-left font-medium px-4 py-2">Size</th>
-              <th className="text-left font-medium px-4 py-2 hidden sm:table-cell">Features</th>
+              {hasFeatures && <th className="text-left font-medium px-4 py-2 hidden sm:table-cell">Features</th>}
             </tr>
           </thead>
           {levels.map(([level, list]) => (
@@ -91,7 +99,7 @@ const RoomsTable: React.FC<{ rooms: Room[] }> = ({ rooms }) => {
                 <tr key={`${r.type}-${i}`} className="border-t border-slate-100 align-top">
                   <td className="px-4 py-2 text-slate-900">{r.type}</td>
                   <td className="px-4 py-2 text-slate-700 whitespace-nowrap">{r[unit] || r.dimensions || '—'}</td>
-                  <td className="px-4 py-2 text-slate-600 hidden sm:table-cell">{r.description || ''}</td>
+                  {hasFeatures && <td className="px-4 py-2 text-slate-600 hidden sm:table-cell">{r.description || ''}</td>}
                 </tr>
               ))}
             </tbody>
