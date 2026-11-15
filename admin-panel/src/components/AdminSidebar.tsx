@@ -14,7 +14,6 @@ import {
   Megaphone,
   LogOut,
   Settings,
-  Bell
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
@@ -79,7 +78,7 @@ const AdminSidebar = () => {
       label: 'Marketing', 
       icon: Megaphone, 
       roles: ['admin', 'superadmin'],
-      description: 'Campaigns & tools'
+      description: 'Leads & subscribers'
     },
   ];
 
@@ -164,20 +163,18 @@ const AdminSidebar = () => {
         {/* Quick Actions */}
         <div className="border-t pt-4 space-y-2">
           <Button
+            asChild
             variant="ghost"
             size="sm"
-            className="w-full justify-start text-gray-600 hover:text-realtor-navy hover:bg-gray-50"
+            className={cn(
+              'w-full justify-start text-gray-600 hover:text-realtor-navy hover:bg-gray-50',
+              location.pathname === '/admin/settings' && 'text-realtor-navy bg-gray-50'
+            )}
           >
-            <Settings className="w-4 h-4 mr-2" />
-            Settings
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start text-gray-600 hover:text-realtor-navy hover:bg-gray-50"
-          >
-            <Bell className="w-4 h-4 mr-2" />
-            Notifications
+            <Link to="/admin/settings">
+              <Settings className="w-4 h-4 mr-2" />
+              Settings
+            </Link>
           </Button>
         </div>
 

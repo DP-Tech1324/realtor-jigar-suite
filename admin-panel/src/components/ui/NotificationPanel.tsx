@@ -1,93 +1,52 @@
-
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bell, X, CheckCircle, AlertCircle, Info, Clock } from 'lucide-react';
+import { Bell, X, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getLastSeen, markAllSeen, timeAgo, useActivityFeed } from '@/hooks/useActivityFeed';
+import { ActivityIcon } from '@/components/ActivityIcon';
 
-interface Notification {
-  id: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  title: string;
-  message: string;
-  timestamp: string;
-  read: boolean;
-}
-
+// The bell: real site activity (leads, sign-ups, listing changes). "Unread" means newer
+// than the last time this browser marked everything read.
 const NotificationPanel = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      type: 'info',
-      title: 'New Property Listed',
-      message: 'A new property has been added to the system and is awaiting review.',
-      timestamp: '2 hours ago',
-      read: false,
-    },
-    {
-      id: '2',
-      type: 'success',
-      title: 'Inquiry Resolved',
-      message: 'Customer inquiry #12345 has been successfully resolved.',
-      timestamp: '4 hours ago',
-      read: false,
-    },
-    {
-      id: '3',
-      type: 'warning',
-      title: 'System Maintenance',
-      message: 'Scheduled maintenance window starts at midnight tonight.',
-      timestamp: '6 hours ago',
-      read: true,
-    },
-  ]);
-
+  const navigate = useNavigate();
+  const { data: activity = [], isLoading, isError } = useActivityFeed(20);
   const [isOpen, setIsOpen] = useState(false);
+  const [lastSeen, setLastSeen] = useState(getLastSeen);
+  const panelRef = useRef<HTMLDivElement>(null);
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(notif =>
-        notif.id === id ? { ...notif, read: true } : notif
-      )
-    );
-  };
+  // Close when clicking outside
+  useEffect(() => {
+    if (!isOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) setIsOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [isOpen]);
 
-  const removeNotification = (id: string) => {
-    setNotifications(prev => prev.filter(notif => notif.id !== id));
-  };
+  const unreadCount = activity.filter((a) => a.at > lastSeen).length;
 
   const markAllAsRead = () => {
-    setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
-  };
-
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  const getIcon = (type: string) => {
-    switch (type) {
-      case 'success':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'warning':
-        return <AlertCircle className="h-5 w-5 text-yellow-500" />;
-      case 'error':
-        return <AlertCircle className="h-5 w-5 text-red-500" />;
-      default:
-        return <Info className="h-5 w-5 text-blue-500" />;
-    }
+    markAllSeen();
+    setLastSeen(getLastSeen());
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={panelRef}>
       <Button
         variant="ghost"
         size="icon"
         onClick={() => setIsOpen(!isOpen)}
         className="relative"
+        aria-label={unreadCount ? `Notifications, ${unreadCount} new` : 'Notifications'}
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white text-xs">
-            {unreadCount}
+          <Badge className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center p-0 px-1 bg-red-500 text-white text-xs">
+            {unreadCount > 9 ? '9+' : unreadCount}
           </Badge>
         )}
       </Button>
@@ -100,81 +59,57 @@ const NotificationPanel = () => {
                 <CardTitle className="text-lg">Notifications</CardTitle>
                 <div className="flex items-center gap-2">
                   {unreadCount > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={markAllAsRead}
-                      className="text-xs"
-                    >
+                    <Button variant="ghost" size="sm" onClick={markAllAsRead} className="text-xs">
                       Mark all read
                     </Button>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setIsOpen(false)}
-                    className="h-6 w-6"
-                  >
+                  <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="h-6 w-6" aria-label="Close">
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="p-0 max-h-96 overflow-y-auto">
-              {notifications.length === 0 ? (
+              {isLoading ? (
+                <p className="p-6 text-center text-sm text-gray-500">Loading…</p>
+              ) : isError ? (
+                <p className="p-6 text-center text-sm text-red-600">Couldn't load activity.</p>
+              ) : activity.length === 0 ? (
                 <div className="p-6 text-center text-gray-500">
                   <Bell className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                  <p>No notifications</p>
+                  <p>No activity yet</p>
+                  <p className="text-xs mt-1">Inquiries, consultation requests and newsletter sign-ups show up here.</p>
                 </div>
               ) : (
-                <div className="space-y-1">
-                  {notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className={cn(
-                        'p-4 border-b hover:bg-gray-50 transition-colors cursor-pointer',
-                        !notification.read && 'bg-blue-50/50'
-                      )}
-                      onClick={() => markAsRead(notification.id)}
-                    >
-                      <div className="flex items-start gap-3">
-                        {getIcon(notification.type)}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-1">
-                            <h4 className={cn(
-                              'text-sm font-medium truncate',
-                              !notification.read && 'font-semibold'
-                            )}>
-                              {notification.title}
-                            </h4>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeNotification(notification.id);
-                              }}
-                              className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                          <p className="text-sm text-gray-600 mb-2">
-                            {notification.message}
-                          </p>
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-3 w-3 text-gray-400" />
-                            <span className="text-xs text-gray-400">
-                              {notification.timestamp}
-                            </span>
-                            {!notification.read && (
-                              <div className="w-2 h-2 bg-blue-500 rounded-full ml-auto" />
-                            )}
+                <div>
+                  {activity.map((a) => {
+                    const unread = a.at > lastSeen;
+                    return (
+                      <button
+                        key={a.id}
+                        type="button"
+                        className={cn('w-full text-left p-4 border-b hover:bg-gray-50 transition-colors', unread && 'bg-blue-50/50')}
+                        onClick={() => {
+                          setIsOpen(false);
+                          navigate(a.link);
+                        }}
+                      >
+                        <div className="flex items-start gap-3">
+                          <ActivityIcon kind={a.kind} />
+                          <div className="flex-1 min-w-0">
+                            <h4 className={cn('text-sm truncate', unread ? 'font-semibold' : 'font-medium')}>{a.title}</h4>
+                            {a.detail && <p className="text-sm text-gray-600 truncate">{a.detail}</p>}
+                            <div className="flex items-center gap-2 mt-1">
+                              <Clock className="h-3 w-3 text-gray-400" />
+                              <span className="text-xs text-gray-400">{timeAgo(a.at)}</span>
+                              {a.needsAction && <span className="text-xs text-orange-600 font-medium">Needs reply</span>}
+                              {unread && <div className="w-2 h-2 bg-blue-500 rounded-full ml-auto" />}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

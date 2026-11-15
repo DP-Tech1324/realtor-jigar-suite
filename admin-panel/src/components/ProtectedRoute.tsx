@@ -16,18 +16,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   allowedRoles = [],
 }) => {
   const { user, isLoading, isAdmin, isAgent, userRole } = useAuth();
+  // The context only finishes loading once this user's role is known, so no stale fallbacks
   const location = useLocation();
-
-  const resolvedRole = userRole || localStorage.getItem('userRole');
-  const resolvedAdmin = isAdmin || localStorage.getItem('isAdmin') === 'true';
-
-  console.log('🔐 ProtectedRoute DEBUG', {
-    isLoading,
-    user: !!user,
-    resolvedRole,
-    resolvedAdmin,
-    location: location.pathname,
-  });
 
   // Wait for auth to fully load
   if (isLoading) {
@@ -44,12 +34,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // Role check
-  if (allowedRoles.length > 0 && (!resolvedRole || !allowedRoles.includes(resolvedRole))) {
+  if (allowedRoles.length > 0 && (!userRole || !allowedRoles.includes(userRole))) {
     return <Navigate to="/access-denied" replace />;
   }
 
   // Admin check
-  if (requireAdmin && !resolvedAdmin) {
+  if (requireAdmin && !isAdmin) {
     return <Navigate to="/access-denied" replace />;
   }
 

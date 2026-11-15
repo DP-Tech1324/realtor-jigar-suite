@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Home, TrendingUp, MapPin, Bed, Bath, Square } from "lucide-react";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const HomeValuation = () => {
   const [address, setAddress] = useState("");
@@ -14,11 +16,37 @@ const HomeValuation = () => {
   const [bathrooms, setBathrooms] = useState("");
   const [squareFootage, setSquareFootage] = useState("");
   const [propertyType, setPropertyType] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Saved as a consultation request; Jigar sees it under Marketing & Leads in the admin
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Placeholder for valuation logic
-    console.log("Valuation request submitted", { address, bedrooms, bathrooms, squareFootage, propertyType });
+    setSending(true);
+    const details = [
+      `Address: ${address}`,
+      propertyType && `Type: ${propertyType}`,
+      bedrooms && `Bedrooms: ${bedrooms}`,
+      bathrooms && `Bathrooms: ${bathrooms}`,
+      squareFootage && `Size: ${squareFootage} sqft`,
+    ].filter(Boolean).join("\n");
+    const { error } = await supabase.from("consultations").insert({
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim() || null,
+      consultation_type: "Home valuation",
+      message: details,
+    });
+    setSending(false);
+    if (error) {
+      toast({ title: "Couldn't send your request", description: "Please try again or call (647) 801-5448.", variant: "destructive" });
+      return;
+    }
+    setSent(true);
   };
 
   return (
@@ -54,8 +82,26 @@ const HomeValuation = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {sent ? (
+                <div className="text-center py-8">
+                  <h3 className="text-xl font-semibold text-slate-900 mb-2">Thank you, {name.split(" ")[0]}!</h3>
+                  <p className="text-slate-600">Jigar will prepare your home's market analysis and contact you within one business day.</p>
+                </div>
+              ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="name">Your Name</Label>
+                    <Input id="name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Phone (optional)</Label>
+                    <Input id="phone" type="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  </div>
                   <div className="md:col-span-2">
                     <Label htmlFor="address">Property Address</Label>
                     <Input
@@ -127,10 +173,11 @@ const HomeValuation = () => {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full" size="lg">
-                  Get Free Home Valuation
+                <Button type="submit" className="w-full" size="lg" disabled={sending}>
+                  {sending ? "Sending…" : "Get Free Home Valuation"}
                 </Button>
               </form>
+              )}
             </CardContent>
           </Card>
         </div>

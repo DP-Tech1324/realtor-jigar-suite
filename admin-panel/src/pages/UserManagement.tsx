@@ -18,6 +18,7 @@ import {
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import AddStaffForm from '@/components/AddStaffForm';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,6 +42,7 @@ const UserManagement = () => {
     setRoleFilter,
     updateUserRole,
     toggleUserStatus,
+    refetch,
   } = useUserManagement();
 
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -149,6 +151,8 @@ const UserManagement = () => {
         </Card>
       </div>
 
+      <AddStaffForm onAdded={refetch} />
+
       {/* Filters */}
       <Card className="border-0 shadow-md">
         <CardContent className="p-6">
@@ -162,13 +166,13 @@ const UserManagement = () => {
                 className="pl-10"
               />
             </div>
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <Select value={roleFilter || 'all'} onValueChange={(v) => setRoleFilter(v === 'all' ? '' : v)}>
               <SelectTrigger className="w-full sm:w-48">
                 <Filter className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Filter by role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Roles</SelectItem>
+                <SelectItem value="all">All Roles</SelectItem>
                 <SelectItem value="superadmin">Super Admin</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="editor">Editor</SelectItem>

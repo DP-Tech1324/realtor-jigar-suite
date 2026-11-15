@@ -16,6 +16,7 @@ import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminAnalytics from '@/pages/admin/AdminAnalytics';
 import AdminImages from '@/pages/admin/AdminImages';
 import AdminMarketing from '@/pages/admin/AdminMarketing';
+import AdminSettings from '@/pages/admin/AdminSettings';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AccessDenied from '@/pages/AccessDenied';
 import NotFound from '@/pages/NotFound';
@@ -122,6 +123,14 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
                     <AdminMarketing />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="settings"
+                element={
+                  <ProtectedRoute allowedRoles={allowedRoles}>
+                    <AdminSettings />
                   </ProtectedRoute>
                 }
               />
