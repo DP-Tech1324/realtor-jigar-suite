@@ -94,16 +94,16 @@ const NewsletterSignup = () => {
             {/* Trust indicators */}
             <div className="flex items-center space-x-8 pt-6 border-t border-white/20">
               <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-400">5K+</div>
-                <div className="text-sm text-blue-200">Subscribers</div>
+                <div className="text-2xl font-bold text-yellow-400">Free</div>
+                <div className="text-sm text-blue-200">No cost, ever</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-400">98%</div>
-                <div className="text-sm text-blue-200">Open Rate</div>
+                <div className="text-2xl font-bold text-yellow-400">New</div>
+                <div className="text-sm text-blue-200">Listings first</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-400">Weekly</div>
-                <div className="text-sm text-blue-200">Updates</div>
+                <div className="text-2xl font-bold text-yellow-400">1 click</div>
+                <div className="text-sm text-blue-200">Unsubscribe anytime</div>
               </div>
             </div>
           </div>

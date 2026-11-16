@@ -122,7 +122,12 @@ const FAQ = () => {
         {
           id: "agent-3",
           question: "What makes you different from other agents?",
-          answer: "With 15+ years in the GTA market, I offer deep local knowledge, proven negotiation skills, comprehensive marketing strategies, and personalized service. My track record includes 500+ successful transactions and a 5.0 client satisfaction rating."
+          answer: "I've lived in the GTA since 1998 and watched its communities grow, so I know which areas suit families, singles and seniors. I'm a CNE® Certified Negotiation Expert, received the Master Sales Award in 2023 and the Sales Achievement Award in 2022, and I work in English, Hindi and Gujarati. Whether you're a first-time buyer, an investor or selling, I'm with you from our first meeting through closing."
+        },
+        {
+          id: "agent-languages",
+          question: "What languages do you speak?",
+          answer: "English, Hindi and Gujarati."
         },
         {
           id: "agent-4",
@@ -132,7 +137,7 @@ const FAQ = () => {
         {
           id: "agent-5",
           question: "What areas do you serve?",
-          answer: "I serve the entire Greater Toronto Area including Toronto, Mississauga, Brampton, Markham, Richmond Hill, Vaughan, Oakville, Burlington, and surrounding communities. My extensive network covers all major GTA markets."
+          answer: "Mississauga (including Applewood and Applewood Heights), Brampton, Burlington, Georgetown and Halton Region, Hamilton (including Dundurn Park and the McMaster University area), Flamborough, Kitchener-Waterloo, Brantford, Hagersville, Fort Erie, Fonthill and Pelham, and Bruce County / the Bruce Peninsula. For homes elsewhere in Canada, I can connect you with a trusted local REALTOR®."
         }
       ]
     }

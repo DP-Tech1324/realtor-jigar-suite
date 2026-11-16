@@ -33,10 +33,10 @@ const MarketingStrategy = () => {
   ];
 
   const marketingStats = [
-    { stat: "500+", description: "Online platforms", color: "text-blue-600" },
-    { stat: "95%", description: "Online buyer engagement", color: "text-green-600" },
-    { stat: "3x", description: "More exposure than average", color: "text-purple-600" },
-    { stat: "18", description: "Average days to sell", color: "text-orange-600" }
+    { stat: "MLS®", description: "Listed on the MLS® System", color: "text-blue-600" },
+    { stat: "CNE®", description: "Certified Negotiation Expert on your offers", color: "text-green-600" },
+    { stat: "3", description: "Languages: English, Hindi, Gujarati", color: "text-purple-600" },
+    { stat: "2023", description: "Master Sales Award", color: "text-orange-600" }
   ];
 
   return (

@@ -10,7 +10,7 @@ import InquiryForm from "@/components/InquiryForm";
 import Footer from "@/components/Footer";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, TrendingUp, Calculator, Users, Star } from "lucide-react";
+import { ArrowRight, Award, HeartHandshake, MapPin } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -19,11 +19,11 @@ const Index = () => {
     navigate('/search');
   };
 
+  // From Jigar's Royal LePage profile; only verifiable facts here (no invented counts)
   const stats = [
-    { icon: TrendingUp, value: "500+", label: "Properties Sold" },
-    { icon: Users, value: "400+", label: "Happy Families" },
-    { icon: Calculator, value: "5+", label: "Years Experience" },
-   /* { icon: Star, value: "5.0", label: "Client Rating" }, */
+    { icon: Award, value: "2023", label: "Master Sales Award" },
+    { icon: HeartHandshake, value: "CNE®", label: "Certified Negotiation Expert" },
+    { icon: MapPin, value: "Since 1998", label: "Living in the GTA" },
   ];
 
   return (
