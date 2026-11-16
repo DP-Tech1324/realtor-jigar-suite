@@ -90,7 +90,7 @@ const Footer = () => {
               </div>
               <div className="flex items-center">
                 <Mail size={16} className="mr-2" />
-                <a href="mailto:jigar@royallepage.ca">jigar@royallepage.ca</a>
+                <a href="mailto:jigar@jigarpatelrealestate.com">jigar@jigarpatelrealestate.com</a>
               </div>
               <div className="flex items-start">
                 <MapPin size={16} className="mr-2 mt-1" />
