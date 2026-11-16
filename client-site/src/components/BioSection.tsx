@@ -83,7 +83,7 @@ function BioSection() {
                 </div>
                 <div className="flex items-center">
                   <Mail className="h-5 w-5 text-blue-600 mr-3" />
-                  <span className="text-slate-700">jigar@jigarpatel.com</span>
+                  <span className="text-slate-700">jigar@jigarpatelrealestate.com</span>
                 </div>
                 <div className="flex items-start sm:col-span-2">
                   <MapPin className="h-5 w-5 text-blue-600 mr-3 mt-0.5 shrink-0" />
