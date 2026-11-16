@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { AddFromMls } from './AddFromMls';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -25,6 +26,7 @@ interface PropertyFormProps {
   initialData?: Partial<Property>;
   isSubmitting?: boolean;
   onCancel?: () => void;
+  onAddedFromMls?: (listingId: string) => void;
 }
 
 // Define validation schema with zod
@@ -55,7 +57,7 @@ const propertySchema = z.object({
 
 type PropertyFormValues = z.infer<typeof propertySchema>;
 
-export function PropertyForm({ onSubmit, initialData, isSubmitting, onCancel }: PropertyFormProps) {
+export function PropertyForm({ onSubmit, initialData, isSubmitting, onCancel, onAddedFromMls }: PropertyFormProps) {
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [additionalImages, setAdditionalImages] = useState<string[]>(initialData?.images || []);
   const [activeTab, setActiveTab] = useState<string>("basic");
@@ -159,7 +161,7 @@ export function PropertyForm({ onSubmit, initialData, isSubmitting, onCancel }: 
               <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
                 <TabsTrigger value="basic">Basic Information</TabsTrigger>
                 <TabsTrigger value="vastu">Vastu</TabsTrigger>
-                <TabsTrigger value="mls">MLS Integration</TabsTrigger>
+                <TabsTrigger value="mls">MLS®</TabsTrigger>
                 <TabsTrigger value="seo">SEO & Advanced</TabsTrigger>
               </TabsList>
 
@@ -168,6 +170,14 @@ export function PropertyForm({ onSubmit, initialData, isSubmitting, onCancel }: 
               </TabsContent>
 
               <TabsContent value="mls" className="space-y-6 pt-4">
+                {!initialData?.id && onAddedFromMls && (
+                  <>
+                    <AddFromMls onAdded={onAddedFromMls} />
+                    <p className="text-sm text-gray-500">
+                      Or, for a property that isn't on the MLS®, fill in the other tabs and enter its MLS® number below if it has one.
+                    </p>
+                  </>
+                )}
                 <FormField
                   control={form.control}
                   name="mls_number"
@@ -178,29 +188,13 @@ export function PropertyForm({ onSubmit, initialData, isSubmitting, onCancel }: 
                         <Input placeholder="Enter MLS number" {...field} />
                       </FormControl>
                       <FormDescription>
-                        Enter an MLS number to import details from Royal LePage
+                        The listing's MLS® number. To bring in an MLS® listing with all its details, use "Add from MLS®" on the Properties page.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 
-                <div className="border rounded-lg p-4 mt-4">
-                  <h3 className="text-lg font-medium mb-2">Royal LePage Integration</h3>
-                  <p className="text-sm text-gray-500 mb-4">
-                    View real-time data from Royal LePage using the iframe below. This integration allows you to easily
-                    reference listing details directly from their system.
-                  </p>
-                  <div className="border rounded bg-gray-50 p-2">
-                    <iframe
-                      src="https://www.royallepage.ca/en/search/homes/on/toronto/"
-                      className="w-full min-h-[500px] border-none"
-                      title="Royal LePage Property Listings"
-                      sandbox="allow-scripts allow-same-origin"
-                      loading="lazy"
-                    />
-                  </div>
-                </div>
               </TabsContent>
               
               <TabsContent value="basic" className="space-y-6 pt-4">

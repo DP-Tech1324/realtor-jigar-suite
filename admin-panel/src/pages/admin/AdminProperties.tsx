@@ -9,6 +9,7 @@ import { PropertyFormModal } from '@/components/property-management/PropertyForm
 import { Property } from '@/types/Property';
 import { useAdminProperties } from '@/hooks/useAdminProperties';
 import { MlsFeedPanel } from '@/components/property-management/MlsFeedPanel';
+import { AddFromMls } from '@/components/property-management/AddFromMls';
 import { useAuth } from '@/contexts/AuthContext';
 
 const AdminProperties = () => {
@@ -22,6 +23,7 @@ const AdminProperties = () => {
     handleSubmit,
     handleUpdate,
     handleDelete,
+    handleRemoveFromList,
     handleToggleStatus,
     reload,
   } = useAdminProperties();
@@ -84,6 +86,8 @@ const AdminProperties = () => {
         featured={featured}
       />
 
+      <AddFromMls onAdded={reload} />
+
       {(userRole === 'admin' || userRole === 'superadmin') && <MlsFeedPanel onSynced={reload} />}
 
       <Card>
@@ -95,6 +99,7 @@ const AdminProperties = () => {
             properties={properties}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onRemoveFromList={handleRemoveFromList}
             onToggleStatus={handleToggleStatus}
             isLoading={loading}
           />
@@ -107,6 +112,7 @@ const AdminProperties = () => {
         isSubmitting={isSubmitting}
         onSubmit={handleFormSubmit}
         onClose={handleCloseModal}
+        onAddedFromMls={() => { handleCloseModal(); reload(); }}
       />
     </div>
   );

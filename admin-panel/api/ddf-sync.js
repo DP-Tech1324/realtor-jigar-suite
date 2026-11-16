@@ -3,6 +3,7 @@
 //   GET  /api/ddf-sync                      cron run (Authorization: Bearer CRON_SECRET)
 //   POST /api/ddf-sync                      "Sync now" from the admin panel (staff token)
 //   POST /api/ddf-sync { find_agent: "Jigar Patel" }   look up agent keys for DDF_AGENT_KEYS
+//   POST /api/ddf-sync { import_mls: "W14079974" }     save one listing that isn't stored yet (Add from MLS®)
 //
 // Each run works for up to ~4 minutes and can be repeated until `more` is false:
 //   1. Jigar's own listings (DDF_AGENT_KEYS, any province): refreshed every run.
@@ -212,6 +213,25 @@ async function sync() {
   };
 }
 
+// "Add from MLS®" in the admin: one listing the stored feed doesn't have (new, or outside Ontario)
+async function importMls(mls) {
+  const token = await getToken();
+  const page = await ddfGet(token, propertyUrl({ filter: `ListingId eq ${odataString(mls)}`, top: 1 }));
+  const item = page.value?.[0];
+  if (!item) throw Object.assign(new Error(`MLS® ${mls} isn't on CREA's feed. Check the number.`), { status: 404 });
+
+  const supabase = createClient(process.env.VITE_SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+  const offices = await lookupOffices(token, new Set([item.ListOfficeKey].filter(Boolean).map(String)));
+  if (offices.size) {
+    check(await supabase.from('ddf_offices').upsert([...offices].map(([office_key, office_name]) => ({ office_key, office_name }))), 'Saving office');
+  }
+  const row = toRow(item, { ownKeys: list(process.env.DDF_AGENT_KEYS), offices });
+  if (!row) throw Object.assign(new Error(`MLS® ${mls} is missing its address on CREA's feed.`), { status: 422 });
+  check(await supabase.rpc('upsert_ddf_listings', { rows: [row] }), 'Saving listing');
+  const saved = check(await supabase.from('listings').select('id').eq('listing_key', row.listing_key).single(), 'Reading listing');
+  return { id: saved.id };
+}
+
 export default async function handler(req, res) {
   if (!['GET', 'POST'].includes(req.method)) return res.status(405).json({ error: 'Method not allowed' });
   try {
@@ -220,6 +240,9 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'SERVICE_ROLE_KEY (Supabase service_role key) is not set in Vercel.' });
     }
     const body = req.method === 'POST' ? await readBody(req) : {};
+    if (body.import_mls) {
+      return res.status(200).json(await importMls(String(body.import_mls).trim().toUpperCase()));
+    }
     if (body.find_agent) {
       const token = await getToken();
       return res.status(200).json({ matches: await findAgent(token, body.find_agent) });

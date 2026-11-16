@@ -9,6 +9,7 @@ interface PropertyGridProps {
   properties: Property[];
   onEdit: (property: Property) => void;
   onDelete: (id: string) => void;
+  onRemoveFromList?: (id: string) => void;
   onToggleStatus: (id: string, currentStatus: 'published' | 'draft') => void;
   isLoading?: boolean;
   hasMore?: boolean;
@@ -20,6 +21,7 @@ export function PropertyGrid({
   properties, 
   onEdit, 
   onDelete, 
+  onRemoveFromList,
   onToggleStatus, 
   isLoading = false,
   hasMore = false,
@@ -44,6 +46,7 @@ export function PropertyGrid({
             property={property}
             onEdit={onEdit}
             onDelete={onDelete}
+            onRemoveFromList={onRemoveFromList}
             onToggleStatus={onToggleStatus}
           />
         ))}
