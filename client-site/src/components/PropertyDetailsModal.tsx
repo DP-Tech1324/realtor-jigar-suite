@@ -2,6 +2,7 @@ import {
   X, Share2, Heart, Printer, Maximize, Phone, Mail, MapPin
 } from "lucide-react";
 import { formatListingPrice } from "@/lib/price";
+import InquiryForm from "@/components/InquiryForm";
 
 export default function PropertyDetailsModal({ listing, onClose }: { listing: any, onClose: () => void }) {
   // Example images (replace with listing.images if available)
@@ -81,17 +82,13 @@ export default function PropertyDetailsModal({ listing, onClose }: { listing: an
           </div>
         </div>
         {/* Lead form */}
-        <div className="bg-white rounded-xl shadow p-6 sticky top-24">
-          <div className="font-bold text-slate-900 mb-2">Request More Information</div>
-          <form className="flex flex-col gap-3">
-            <input type="text" className="border p-2 rounded" placeholder="Name*" />
-            <input type="tel" className="border p-2 rounded" placeholder="Phone*" />
-            <input type="email" className="border p-2 rounded" placeholder="Email*" />
-            <textarea className="border p-2 rounded" placeholder={`I'm interested in ${listing.title}`} rows={3} />
-            <button className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded font-semibold mt-2" type="submit">
-              Send Message
-            </button>
-          </form>
+        <div className="sticky top-24">
+          <InquiryForm
+            listingId={listing.id}
+            listingTitle={listing.mls_number ? `${listing.title} (MLS® ${listing.mls_number})` : listing.title}
+            inquiryType="info"
+            title="Request More Information"
+          />
         </div>
       </div>
     </div>

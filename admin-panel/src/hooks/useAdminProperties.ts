@@ -16,11 +16,12 @@ export function useAdminProperties() {
   useEffect(() => {
     const fetchProperties = async () => {
       setLoading(true);
-      // Jigar's own listings only: manual ones plus his MLS® feed listings
+      // Jigar's listings: manual ones, his own MLS® feed listings, and MLS® listings he added
+      // with "Add from MLS®" (featured)
       const { data, error } = await supabase
         .from('listings')
         .select('*')
-        .or('source.eq.manual,is_own_listing.eq.true')
+        .or('source.eq.manual,is_own_listing.eq.true,is_featured.eq.true')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -128,6 +129,14 @@ export function useAdminProperties() {
     toast({ title: error ? "Delete failed" : "Property deleted", variant: error ? "destructive" : "default" });
   };
 
+  // MLS® listings added with "Add from MLS®": take them off the list and the homepage.
+  // The listing itself stays in the MLS® feed.
+  const handleRemoveFromList = async (id: string) => {
+    const { error } = await supabase.from('listings').update({ is_featured: false }).eq('id', id);
+    if (!error) setProperties((prev) => prev.filter((p) => p.id !== id));
+    toast({ title: error ? "Remove failed" : "Removed from your listings", variant: error ? "destructive" : "default" });
+  };
+
   // Toggle status handler
   const handleToggleStatus = async (id: string, currentStatus: 'published' | 'draft') => {
     const newStatus = currentStatus === 'published' ? 'draft' : 'published';
@@ -154,6 +163,7 @@ export function useAdminProperties() {
     handleSubmit,
     handleUpdate,
     handleDelete,
+    handleRemoveFromList,
     handleToggleStatus,
     reload: () => setReloadKey((k) => k + 1),
   };

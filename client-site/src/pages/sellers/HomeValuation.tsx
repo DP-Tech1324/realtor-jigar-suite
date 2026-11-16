@@ -9,6 +9,7 @@ import { Home, TrendingUp, MapPin, Bed, Bath, Square } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { PHONE_HINT, PHONE_PATTERN } from "@/lib/inquiries";
 
 const HomeValuation = () => {
   const [address, setAddress] = useState("");
@@ -37,7 +38,7 @@ const HomeValuation = () => {
     const { error } = await supabase.from("consultations").insert({
       name: name.trim(),
       email: email.trim(),
-      phone: phone.trim() || null,
+      phone: phone.trim(),
       consultation_type: "Home valuation",
       message: details,
     });
@@ -91,15 +92,15 @@ const HomeValuation = () => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <Label htmlFor="name">Your Name</Label>
+                    <Label htmlFor="name">Your Name *</Label>
                     <Input id="name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} required />
                   </div>
                   <div>
-                    <Label htmlFor="phone">Phone (optional)</Label>
-                    <Input id="phone" type="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                    <Label htmlFor="phone">Phone *</Label>
+                    <Input id="phone" type="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required pattern={PHONE_PATTERN} title={PHONE_HINT} />
                   </div>
                   <div className="md:col-span-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">Email *</Label>
                     <Input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                   </div>
                   <div className="md:col-span-2">

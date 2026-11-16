@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Search, Calendar, User, ArrowRight, BookOpen } from "lucide-react";
+import { subscribeToNewsletter } from "@/lib/inquiries";
+import { useToast } from "@/hooks/use-toast";
 
 interface BlogPost {
   id: string;
@@ -21,6 +23,22 @@ interface BlogPost {
 const Blog = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [subscribing, setSubscribing] = useState(false);
+  const { toast } = useToast();
+
+  const subscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubscribing(true);
+    const error = await subscribeToNewsletter(newsletterEmail);
+    setSubscribing(false);
+    if (error) {
+      toast({ title: "Couldn't subscribe", description: "Please try again in a moment.", variant: "destructive" });
+      return;
+    }
+    setNewsletterEmail("");
+    toast({ title: "Subscribed!", description: "You'll get market updates and new listings from Jigar." });
+  };
 
   const blogPosts: BlogPost[] = [
     {
@@ -260,15 +278,21 @@ const Blog = () => {
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
             Subscribe to receive the latest real estate news, market reports, and expert tips directly in your inbox.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-            <Input 
+          <form onSubmit={subscribe} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+            <Input
+              id="blog-newsletter-email"
+              type="email"
+              required
+              autoComplete="email"
+              value={newsletterEmail}
+              onChange={(e) => setNewsletterEmail(e.target.value)}
               placeholder="Enter your email"
               className="flex-1 bg-white"
             />
-            <Button variant="secondary" className="bg-white text-blue-600 hover:bg-gray-100">
-              Subscribe
+            <Button type="submit" disabled={subscribing} variant="secondary" className="bg-white text-blue-600 hover:bg-gray-100">
+              {subscribing ? "Subscribing…" : "Subscribe"}
             </Button>
-          </div>
+          </form>
         </div>
       </section>
 

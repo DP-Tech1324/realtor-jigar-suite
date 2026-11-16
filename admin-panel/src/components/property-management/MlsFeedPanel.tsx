@@ -13,7 +13,7 @@ interface AgentMatch {
   office: string | null;
 }
 
-async function callSync(body: Record<string, unknown> = {}) {
+export async function callSync(body: Record<string, unknown> = {}) {
   const { data: { session } } = await supabase.auth.getSession();
   const res = await fetch('/api/ddf-sync', {
     method: 'POST',

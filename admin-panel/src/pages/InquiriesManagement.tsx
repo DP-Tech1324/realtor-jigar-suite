@@ -36,8 +36,37 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { useInquiriesManagement } from '@/hooks/useInquiriesManagement';
+import { useInquiriesManagement, type Inquiry } from '@/hooks/useInquiriesManagement';
+import { INQUIRY_TYPES, WEBSITE_URL, formatShowing, inquiryTypeInfo } from '@/lib/inquiries';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+
+const TypeBadge = ({ type }: { type?: string }) => {
+  const { label, className } = inquiryTypeInfo(type);
+  return <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${className}`}>{label}</span>;
+};
+
+// The requested showing time and the property the lead is about, linked to its website page
+const InquiryContext = ({ inquiry }: { inquiry: Inquiry }) => {
+  if (!inquiry.preferred_date && !inquiry.preferred_time && !inquiry.listing) return null;
+  return (
+    <div className="mb-4 space-y-2 text-sm">
+      {(inquiry.preferred_date || inquiry.preferred_time) && (
+        <div className="inline-flex items-center gap-2 rounded-md bg-purple-50 px-3 py-1.5 font-medium text-purple-900">
+          <Calendar className="h-4 w-4" /> Wants a showing: {formatShowing(inquiry.preferred_date, inquiry.preferred_time)}
+        </div>
+      )}
+      {inquiry.listing && (
+        <div className="text-gray-700">
+          Property:{' '}
+          <a href={`${WEBSITE_URL}/property/${inquiry.listing.id}`} target="_blank" rel="noopener noreferrer" className="font-medium text-realtor-navy hover:underline">
+            {inquiry.listing.address}, {inquiry.listing.city?.split('(')[0].trim()}
+          </a>
+          {inquiry.listing.mls_number && <span className="text-gray-500"> · MLS® {inquiry.listing.mls_number}</span>}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const InquiriesManagement = () => {
   const {
@@ -47,6 +76,8 @@ const InquiriesManagement = () => {
     setSearchTerm,
     statusFilter,
     setStatusFilter,
+    typeFilter,
+    setTypeFilter,
     updateInquiryStatus,
     deleteInquiry,
   } = useInquiriesManagement();
@@ -192,6 +223,17 @@ const InquiriesManagement = () => {
                 <SelectItem value="closed">Closed</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={typeFilter || 'all'} onValueChange={(v) => setTypeFilter(v === 'all' ? '' : v)}>
+              <SelectTrigger className="w-full sm:w-52">
+                <SelectValue placeholder="Filter by type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All types</SelectItem>
+                {Object.entries(INQUIRY_TYPES).map(([value, { label }]) => (
+                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -215,8 +257,10 @@ const InquiriesManagement = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-3">
                         <h3 className="font-semibold text-lg">{inquiry.name}</h3>
+                        <TypeBadge type={inquiry.inquiry_type} />
                         {getStatusBadge(inquiry.status)}
                       </div>
+                      <InquiryContext inquiry={inquiry} />
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div className="flex items-center text-sm text-gray-600">
@@ -336,10 +380,15 @@ const InquiriesManagement = () => {
                   </div>
                 )}
                 <div>
-                  <label className="text-sm font-medium text-gray-600">Date</label>
+                  <label className="text-sm font-medium text-gray-600">Received</label>
                   <p>{new Date(selectedInquiry.created_at).toLocaleString()}</p>
                 </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Type</label>
+                  <div className="mt-1"><TypeBadge type={selectedInquiry.inquiry_type} /></div>
+                </div>
               </div>
+              <InquiryContext inquiry={selectedInquiry} />
               
               <div>
                 <label className="text-sm font-medium text-gray-600">Message</label>

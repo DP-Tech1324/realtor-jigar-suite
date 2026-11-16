@@ -5,51 +5,81 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useCreateInquiry } from '@/hooks/useListings';
-import { Loader2 } from 'lucide-react';
+import { CheckCircle, Loader2 } from 'lucide-react';
+import { PHONE_HINT, PHONE_PATTERN, SHOWING_TIMES, TOPIC_MESSAGES, type InquiryType } from '@/lib/inquiries';
 
 interface InquiryFormProps {
   listingId?: string;
   listingTitle?: string;
   initialMessage?: string;
+  // What kind of request this is; the admin shows it as a badge and can filter by it
+  inquiryType?: InquiryType;
+  title?: string;
 }
 
-const InquiryForm: React.FC<InquiryFormProps> = ({ listingId, listingTitle, initialMessage }) => {
+const todayIso = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
+
+const InquiryForm: React.FC<InquiryFormProps> = ({ listingId, listingTitle, initialMessage, inquiryType = 'general', title }) => {
+  const emptyMessage = initialMessage ?? (listingTitle
+    ? `Hi Jigar, I'm interested in "${listingTitle}". Please contact me.`
+    : TOPIC_MESSAGES[inquiryType]);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    message: initialMessage ?? (listingTitle ? `I'm interested in "${listingTitle}". Please contact me.` : ''),
+    message: emptyMessage,
+    preferred_date: '',
+    preferred_time: '',
   });
+  const [sent, setSent] = useState(false);
+  const isShowing = inquiryType === 'showing';
 
   const createInquiry = useCreateInquiry();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     await createInquiry.mutateAsync({
-      ...formData,
+      name: formData.name.trim(),
+      email: formData.email.trim(),
+      phone: formData.phone.trim(),
+      message: formData.message.trim(),
       listing_id: listingId,
+      inquiry_type: inquiryType,
+      preferred_date: isShowing && formData.preferred_date ? formData.preferred_date : undefined,
+      preferred_time: isShowing && formData.preferred_time ? formData.preferred_time : undefined,
+      page_url: window.location.href.slice(0, 500),
     });
 
-    // Reset form on success
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      message: '',
-    });
+    setSent(true);
+    setFormData({ name: '', email: '', phone: '', message: emptyMessage, preferred_date: '', preferred_time: '' });
   };
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  if (sent) {
+    return (
+      <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+        <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4" aria-hidden="true" />
+        <h3 className="text-2xl font-bold text-gray-900 mb-2">{isShowing ? 'Showing request sent' : 'Message sent'}</h3>
+        <p className="text-gray-600">
+          {isShowing
+            ? 'Jigar will confirm the showing time with you shortly.'
+            : 'Thank you. Jigar will get back to you soon.'}
+        </p>
+        <Button variant="outline" className="mt-6" onClick={() => setSent(false)}>Send another message</Button>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-2xl shadow-lg p-8">
       <h3 className="text-2xl font-bold text-gray-900 mb-6">
-        {listingTitle ? 'Inquire About This Property' : 'Contact Us'}
+        {title || (listingTitle ? 'Inquire About This Property' : 'Contact Us')}
       </h3>
-      
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-2">
@@ -57,18 +87,20 @@ const InquiryForm: React.FC<InquiryFormProps> = ({ listingId, listingTitle, init
             <Input
               id="name"
               type="text"
+              autoComplete="name"
               value={formData.name}
               onChange={(e) => handleChange('name', e.target.value)}
               required
               placeholder="Enter your full name"
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="email">Email *</Label>
             <Input
               id="email"
               type="email"
+              autoComplete="email"
               value={formData.email}
               onChange={(e) => handleChange('email', e.target.value)}
               required
@@ -78,15 +110,51 @@ const InquiryForm: React.FC<InquiryFormProps> = ({ listingId, listingTitle, init
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="phone">Phone Number</Label>
+          <Label htmlFor="phone">Phone Number *</Label>
           <Input
             id="phone"
             type="tel"
+            autoComplete="tel"
             value={formData.phone}
             onChange={(e) => handleChange('phone', e.target.value)}
-            placeholder="Enter your phone number (optional)"
+            required
+            pattern={PHONE_PATTERN}
+            title={PHONE_HINT}
+            placeholder={isShowing ? 'So Jigar can confirm the time' : 'So Jigar can call you back'}
           />
         </div>
+
+        {isShowing && (
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="preferred_date">Preferred date *</Label>
+              <Input
+                id="preferred_date"
+                type="date"
+                min={todayIso()}
+                value={formData.preferred_date}
+                onChange={(e) => handleChange('preferred_date', e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="preferred_time">Preferred time *</Label>
+              {/* Native list: opens the phone's own picker and can't misfire inside the popup */}
+              <select
+                id="preferred_time"
+                value={formData.preferred_time}
+                onChange={(e) => handleChange('preferred_time', e.target.value)}
+                required
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value="" disabled>Choose a time</option>
+                {SHOWING_TIMES.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="message">Message *</Label>
@@ -96,17 +164,17 @@ const InquiryForm: React.FC<InquiryFormProps> = ({ listingId, listingTitle, init
             onChange={(e) => handleChange('message', e.target.value)}
             required
             placeholder="Tell us about your real estate needs..."
-            rows={5}
+            rows={isShowing ? 3 : 5}
           />
         </div>
 
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           className="w-full bg-blue-600 hover:bg-blue-700"
-          disabled={createInquiry.isPending}
+          disabled={createInquiry.isPending || (isShowing && !formData.preferred_time)}
         >
           {createInquiry.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Send Inquiry
+          {isShowing ? 'Request Showing' : 'Send Inquiry'}
         </Button>
       </form>
     </div>

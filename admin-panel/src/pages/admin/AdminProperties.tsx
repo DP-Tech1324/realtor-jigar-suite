@@ -9,11 +9,14 @@ import { PropertyFormModal } from '@/components/property-management/PropertyForm
 import { Property } from '@/types/Property';
 import { useAdminProperties } from '@/hooks/useAdminProperties';
 import { MlsFeedPanel } from '@/components/property-management/MlsFeedPanel';
+import { AddFromMls } from '@/components/property-management/AddFromMls';
 import { useAuth } from '@/contexts/AuthContext';
 
 const AdminProperties = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+  // New property started from an MLS® number that isn't stored yet
+  const [mlsDraft, setMlsDraft] = useState<Partial<Property> | undefined>();
   
   const {
     properties,
@@ -22,6 +25,7 @@ const AdminProperties = () => {
     handleSubmit,
     handleUpdate,
     handleDelete,
+    handleRemoveFromList,
     handleToggleStatus,
     reload,
   } = useAdminProperties();
@@ -53,6 +57,7 @@ const AdminProperties = () => {
   const handleCloseModal = () => {
     setModalOpen(false);
     setEditingProperty(null);
+    setMlsDraft(undefined);
   };
 
   // Calculate stats
@@ -70,7 +75,7 @@ const AdminProperties = () => {
         </div>
         <Button 
           className="bg-realtor-gold hover:bg-realtor-gold/90" 
-          onClick={() => { setModalOpen(true); setEditingProperty(null); }}
+          onClick={() => { setEditingProperty(null); setMlsDraft(undefined); setModalOpen(true); }}
         >
           <Plus className="mr-2 h-4 w-4" />
           Add Property
@@ -84,6 +89,11 @@ const AdminProperties = () => {
         featured={featured}
       />
 
+      <AddFromMls
+        onAdded={reload}
+        onEnterManually={(mls) => { setEditingProperty(null); setMlsDraft({ mls_number: mls }); setModalOpen(true); }}
+      />
+
       {(userRole === 'admin' || userRole === 'superadmin') && <MlsFeedPanel onSynced={reload} />}
 
       <Card>
@@ -95,6 +105,7 @@ const AdminProperties = () => {
             properties={properties}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onRemoveFromList={handleRemoveFromList}
             onToggleStatus={handleToggleStatus}
             isLoading={loading}
           />
@@ -107,6 +118,8 @@ const AdminProperties = () => {
         isSubmitting={isSubmitting}
         onSubmit={handleFormSubmit}
         onClose={handleCloseModal}
+        onAddedFromMls={() => { handleCloseModal(); reload(); }}
+        draft={mlsDraft}
       />
     </div>
   );

@@ -34,6 +34,7 @@ import { useIsFavorite, useToggleFavorite } from "@/hooks/useFavorites";
 import { useAuth } from "@/components/auth/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import InquiryForm from "@/components/InquiryForm";
+import type { InquiryType } from "@/lib/inquiries";
 import { useNavigate } from "react-router-dom";
 
 // Import the shared AI chat bubble wrapper. This component renders a floating
@@ -54,6 +55,7 @@ const PropertyDetails = () => {
   const [showContactForm, setShowContactForm] = useState(false);
   const [contactMessage, setContactMessage] = useState<string | undefined>();
   const [contactTitle, setContactTitle] = useState('Contact Jigar');
+  const [contactType, setContactType] = useState<InquiryType>('info');
 
   // Count one view per page load for the admin dashboard
   useEffect(() => {
@@ -133,9 +135,10 @@ const PropertyDetails = () => {
   const vastu = parseVastu(listing.vastu);
   const showVastu = !!vastu?.enabled && listing.vastu_score != null;
 
-  const openContact = (message?: string, title = 'Contact Jigar') => {
+  const openContact = (message?: string, title = 'Contact Jigar', type: InquiryType = 'info') => {
     setContactMessage(message);
     setContactTitle(title);
+    setContactType(type);
     setShowContactForm(true);
   };
   
@@ -198,11 +201,8 @@ const PropertyDetails = () => {
   ].filter((f) => f.value != null && f.value !== '').map((f) => ({ label: f.label, value: String(f.value) }));
 
   const listingName = listing.mls_number ? `${listing.address}, ${cityName} (MLS® ${listing.mls_number})` : `${listing.address}, ${cityName}`;
-  const bookShowing = () => openContact(
-    `Hi Jigar, I'd like to book a showing of ${listingName}.\nPreferred date and time: `,
-    'Book a Showing',
-  );
-  const requestInfo = () => openContact(`Hi Jigar, please send me more information about ${listingName}.`, 'Request Information');
+  const bookShowing = () => openContact(`Hi Jigar, I'd like to book a showing of ${listingName}.`, 'Book a Showing', 'showing');
+  const requestInfo = () => openContact(`Hi Jigar, please send me more information about ${listingName}.`, 'Request Information', 'info');
 
   return (
     <div className="min-h-screen bg-white pb-20 lg:pb-0">
@@ -385,7 +385,7 @@ const PropertyDetails = () => {
                 <VastuSection
                   vastu={listing.vastu}
                   facing={listing.facing}
-                  onAsk={() => openContact(`Hi Jigar, I have a Vastu question about "${listing.title}": `)}
+                  onAsk={() => openContact(`Hi Jigar, I have a Vastu question about "${listing.title}": `, 'Vastu Question', 'vastu')}
                 />
               ) : (
                 // MLS® listings without Jigar's details: AI estimate from the floor plan, or a report request
@@ -396,6 +396,8 @@ const PropertyDetails = () => {
                   live={listing.live}
                   onRequest={() => openContact(
                     `Hi Jigar, please prepare a Vastu report for "${listing.title}"${listing.mls_number ? ` (MLS® ${listing.mls_number})` : ''}, ${listing.address}, ${listing.city}.`,
+                    'Request a Vastu Report',
+                    'vastu',
                   )}
                 />
               )}
@@ -575,6 +577,8 @@ const PropertyDetails = () => {
                 listingId={listing.live ? undefined : listing.id}
                 listingTitle={listing.mls_number ? `${listing.title} (MLS® ${listing.mls_number})` : listing.title}
                 initialMessage={contactMessage}
+                inquiryType={contactType}
+                title={contactType === 'showing' ? 'Pick a time that works for you' : undefined}
               />
             </div>
           </div>

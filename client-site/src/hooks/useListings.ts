@@ -172,6 +172,10 @@ export const useCreateInquiry = () => {
       phone?: string;
       message: string;
       listing_id?: string;
+      inquiry_type?: string;
+      preferred_date?: string;
+      preferred_time?: string;
+      page_url?: string;
     }) => {
       // No .select(): visitors may submit inquiries but not read them back (RLS)
       const { error } = await supabase.from('inquiries').insert(inquiry);

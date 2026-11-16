@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mail, CheckCircle, TrendingUp, Home, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { subscribeToNewsletter } from "@/lib/inquiries";
 
 const NewsletterSignup = () => {
   const [email, setEmail] = useState("");
@@ -16,9 +16,8 @@ const NewsletterSignup = () => {
     e.preventDefault();
     if (!email) return;
 
-    const { error } = await supabase.from("newsletter_subscriptions").insert({ email: email.trim().toLowerCase() });
-    // 23505 = already subscribed, which is a success from the visitor's side
-    if (error && error.code !== "23505") {
+    const error = await subscribeToNewsletter(email);
+    if (error) {
       toast({ title: "Couldn't subscribe", description: "Please try again in a moment.", variant: "destructive" });
       return;
     }

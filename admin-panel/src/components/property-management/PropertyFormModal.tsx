@@ -9,6 +9,8 @@ interface PropertyFormModalProps {
   isSubmitting: boolean;
   onSubmit: (formData: any, coverImage?: File, additionalImages?: string[]) => Promise<void>;
   onClose: () => void;
+  onAddedFromMls?: (listingId: string) => void;
+  draft?: Partial<Property>;
 }
 
 export function PropertyFormModal({ 
@@ -16,7 +18,9 @@ export function PropertyFormModal({
   editingProperty, 
   isSubmitting, 
   onSubmit, 
-  onClose 
+  onClose,
+  onAddedFromMls,
+  draft,
 }: PropertyFormModalProps) {
   if (!isOpen) return null;
 
@@ -32,9 +36,10 @@ export function PropertyFormModal({
         </button>
         <PropertyForm
           onSubmit={onSubmit}
-          initialData={editingProperty ?? undefined}
+          initialData={editingProperty ?? draft}
           isSubmitting={isSubmitting}
           onCancel={onClose}
+          onAddedFromMls={onAddedFromMls}
         />
       </div>
     </div>

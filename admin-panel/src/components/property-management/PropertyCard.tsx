@@ -10,10 +10,11 @@ interface PropertyCardProps {
   property: Property;
   onEdit: (property: Property) => void;
   onDelete: (id: string) => void;
+  onRemoveFromList?: (id: string) => void;
   onToggleStatus: (id: string, currentStatus: 'published' | 'draft') => void;
 }
 
-export function PropertyCard({ property, onEdit, onDelete, onToggleStatus }: PropertyCardProps) {
+export function PropertyCard({ property, onEdit, onDelete, onRemoveFromList, onToggleStatus }: PropertyCardProps) {
   const handleDelete = () => {
     if (window.confirm('Are you sure you want to delete this property?')) {
       onDelete(property.id);
@@ -147,6 +148,20 @@ export function PropertyCard({ property, onEdit, onDelete, onToggleStatus }: Pro
             </Button>
             
             {/* MLS® listings come and go with the daily sync, so they can't be unpublished or deleted here */}
+            {property.source === 'ddf' && !property.is_own_listing && onRemoveFromList && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  if (window.confirm('Remove this MLS® listing from your listings and the homepage? It stays on the website search.')) {
+                    onRemoveFromList(property.id);
+                  }
+                }}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Remove
+              </Button>
+            )}
             {property.source !== 'ddf' && (
               <>
                 <Button
