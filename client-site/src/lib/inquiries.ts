@@ -24,6 +24,24 @@ export const CONTACT_TOPICS: { value: InquiryType; label: string }[] = [
   { value: 'general', label: 'Something else' },
 ];
 
+// Pre-written messages, so visitors only fill in the blanks (Contact page follows the topic)
+export const TOPIC_MESSAGES: Record<InquiryType, string> = {
+  buying: "Hi Jigar, I'm looking to buy a home.\nArea: \nBudget: \nBedrooms: \nWhen I'd like to move: ",
+  selling: "Hi Jigar, I'm thinking of selling my home and would like to know what it's worth.\nAddress: \nWhen I'd like to sell: ",
+  renting: "Hi Jigar, I'm looking for a place to rent.\nArea: \nBudget per month: \nMove-in date: ",
+  commercial: "Hi Jigar, I'm interested in a commercial or business property.\nType (retail, office, restaurant...): \nArea: \nBudget: ",
+  'pre-construction': "Hi Jigar, I'm interested in pre-construction homes.\nArea: \nBudget: \nBedrooms: \nMove-in: ",
+  vastu: "Hi Jigar, I'd like Vastu advice for a home.\nAddress or MLS® number: \nWhat I'd like checked: ",
+  showing: "Hi Jigar, I'd like to book a showing.",
+  info: "Hi Jigar, please send me more information.",
+  general: "Hi Jigar, I'd like to talk with you about real estate. Please call me.",
+};
+
+// A phone number Jigar can call back: at least 10 digits, allowing spaces, dashes, brackets, +1
+// Written for the browser's strict pattern mode (the v flag), so brackets and dashes are escaped
+export const PHONE_PATTERN = '\\+?[0-9\\s\\(\\)\\.\\-]{10,20}';
+export const PHONE_HINT = 'Enter a phone number with area code, e.g. 647-801-5448';
+
 // Book a Showing: 30-minute slots, 9:00 AM to 8:00 PM
 export const SHOWING_TIMES = Array.from({ length: 23 }, (_, i) => {
   const minutes = 9 * 60 + i * 30;

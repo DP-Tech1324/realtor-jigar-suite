@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCreateInquiry } from '@/hooks/useListings';
 import { CheckCircle, Loader2 } from 'lucide-react';
-import { SHOWING_TIMES, type InquiryType } from '@/lib/inquiries';
+import { PHONE_HINT, PHONE_PATTERN, SHOWING_TIMES, TOPIC_MESSAGES, type InquiryType } from '@/lib/inquiries';
 
 interface InquiryFormProps {
   listingId?: string;
@@ -21,7 +21,9 @@ interface InquiryFormProps {
 const todayIso = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
 
 const InquiryForm: React.FC<InquiryFormProps> = ({ listingId, listingTitle, initialMessage, inquiryType = 'general', title }) => {
-  const emptyMessage = initialMessage ?? (listingTitle ? `I'm interested in "${listingTitle}". Please contact me.` : '');
+  const emptyMessage = initialMessage ?? (listingTitle
+    ? `Hi Jigar, I'm interested in "${listingTitle}". Please contact me.`
+    : TOPIC_MESSAGES[inquiryType]);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -41,7 +43,7 @@ const InquiryForm: React.FC<InquiryFormProps> = ({ listingId, listingTitle, init
     await createInquiry.mutateAsync({
       name: formData.name.trim(),
       email: formData.email.trim(),
-      phone: formData.phone.trim() || undefined,
+      phone: formData.phone.trim(),
       message: formData.message.trim(),
       listing_id: listingId,
       inquiry_type: inquiryType,
@@ -109,15 +111,17 @@ const InquiryForm: React.FC<InquiryFormProps> = ({ listingId, listingTitle, init
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="phone">Phone Number{isShowing ? ' *' : ''}</Label>
+          <Label htmlFor="phone">Phone Number *</Label>
           <Input
             id="phone"
             type="tel"
             autoComplete="tel"
             value={formData.phone}
             onChange={(e) => handleChange('phone', e.target.value)}
-            required={isShowing}
-            placeholder={isShowing ? 'So Jigar can confirm the time' : 'Enter your phone number (optional)'}
+            required
+            pattern={PHONE_PATTERN}
+            title={PHONE_HINT}
+            placeholder={isShowing ? 'So Jigar can confirm the time' : 'So Jigar can call you back'}
           />
         </div>
 
