@@ -145,8 +145,8 @@ export function PropertyForm({ onSubmit, initialData, isSubmitting, onCancel, on
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>{initialData ? 'Edit Property' : 'Add New Property'}</CardTitle>
-        <CardDescription>Fill out the form to {initialData ? 'update' : 'create'} a property listing.</CardDescription>
+        <CardTitle>{initialData?.id ? 'Edit Property' : 'Add New Property'}</CardTitle>
+        <CardDescription>Fill out the form to {initialData?.id ? 'update' : 'create'} a property listing.</CardDescription>
         {isDdf && (
           <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
             This is an MLS® listing from the CREA feed. Price, address, photos and description update automatically every day
@@ -172,7 +172,13 @@ export function PropertyForm({ onSubmit, initialData, isSubmitting, onCancel, on
               <TabsContent value="mls" className="space-y-6 pt-4">
                 {!initialData?.id && onAddedFromMls && (
                   <>
-                    <AddFromMls onAdded={onAddedFromMls} />
+                    <AddFromMls
+                      onAdded={onAddedFromMls}
+                      onEnterManually={(mls) => {
+                        form.setValue('mls_number', mls);
+                        setActiveTab('basic');
+                      }}
+                    />
                     <p className="text-sm text-gray-500">
                       Or, for a property that isn't on the MLS®, fill in the other tabs and enter its MLS® number below if it has one.
                     </p>
@@ -613,7 +619,7 @@ export function PropertyForm({ onSubmit, initialData, isSubmitting, onCancel, on
 
             <div className="flex gap-4 pt-4">
               <Button type="submit" disabled={isSubmitting} className="bg-realtor-navy hover:bg-realtor-navy/90">
-                {isSubmitting ? 'Saving...' : (initialData ? 'Update Property' : 'Create Property')}
+                {isSubmitting ? 'Saving...' : (initialData?.id ? 'Update Property' : 'Create Property')}
               </Button>
               {onCancel && (
                 <Button type="button" variant="outline" onClick={onCancel}>

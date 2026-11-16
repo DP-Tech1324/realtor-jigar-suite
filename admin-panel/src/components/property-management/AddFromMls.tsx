@@ -13,16 +13,21 @@ import { callSync } from './MlsFeedPanel';
 
 export const normalizeMls = (value: string) => value.toUpperCase().replace(/MLS®?|#|\s/g, '');
 
-export function AddFromMls({ onAdded }: { onAdded: (listingId: string) => void }) {
+export function AddFromMls({ onAdded, onEnterManually }: {
+  onAdded: (listingId: string) => void;
+  onEnterManually?: (mlsNumber: string) => void;
+}) {
   const { toast } = useToast();
   const [mls, setMls] = useState('');
   const [adding, setAdding] = useState(false);
+  const [notFound, setNotFound] = useState<string | null>(null);
 
   // Plain button + Enter key (not a <form>): this also sits inside the property form's MLS® tab
   const add = async () => {
     const number = normalizeMls(mls);
     if (!number) return;
     setAdding(true);
+    setNotFound(null);
     try {
       const { data: found, error } = await supabase
         .from('listings')
@@ -42,11 +47,10 @@ export function AddFromMls({ onAdded }: { onAdded: (listingId: string) => void }
         try {
           id = (await callSync({ import_mls: number })).id;
         } catch (err: any) {
-          throw new Error(
-            /not on CREA|missing its address/i.test(err.message)
-              ? err.message
-              : `MLS® ${number} isn't in the stored listings, and the live CREA lookup isn't available right now (${err.message}).`,
-          );
+          if (/not on CREA|missing its address/i.test(err.message)) throw err;
+          // CREA can't be reached (no access yet, or running on localhost): explain and offer manual entry
+          setNotFound(number);
+          return;
         }
       }
 
@@ -89,6 +93,19 @@ export function AddFromMls({ onAdded }: { onAdded: (listingId: string) => void }
             {adding ? 'Adding…' : 'Add property'}
           </Button>
         </div>
+        {notFound && (
+          <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 flex flex-col sm:flex-row sm:items-center gap-3">
+            <p className="flex-1">
+              MLS® {notFound} isn't in the stored listings yet. Listings newer than the last MLS® sync arrive once the
+              sync and CREA access are back on. You can add it now by entering the details yourself.
+            </p>
+            {onEnterManually && (
+              <Button type="button" variant="outline" size="sm" onClick={() => onEnterManually(notFound)}>
+                Enter it by hand
+              </Button>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
