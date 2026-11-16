@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCreateInquiry } from '@/hooks/useListings';
 import { CheckCircle, Loader2 } from 'lucide-react';
 import { PHONE_HINT, PHONE_PATTERN, SHOWING_TIMES, TOPIC_MESSAGES, type InquiryType } from '@/lib/inquiries';
@@ -140,16 +139,19 @@ const InquiryForm: React.FC<InquiryFormProps> = ({ listingId, listingTitle, init
             </div>
             <div className="space-y-2">
               <Label htmlFor="preferred_time">Preferred time *</Label>
-              <Select value={formData.preferred_time} onValueChange={(v) => handleChange('preferred_time', v)} required>
-                <SelectTrigger id="preferred_time">
-                  <SelectValue placeholder="Choose a time" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SHOWING_TIMES.map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {/* Native list: opens the phone's own picker and can't misfire inside the popup */}
+              <select
+                id="preferred_time"
+                value={formData.preferred_time}
+                onChange={(e) => handleChange('preferred_time', e.target.value)}
+                required
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value="" disabled>Choose a time</option>
+                {SHOWING_TIMES.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
             </div>
           </div>
         )}
