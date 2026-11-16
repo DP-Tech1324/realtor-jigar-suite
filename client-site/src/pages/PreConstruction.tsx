@@ -42,7 +42,7 @@ export default function PreConstruction() {
             ))}
           </ol>
         </div>
-        <InquiryForm initialMessage="I'm interested in pre-construction condos. Area: … Budget: … Bedrooms: … Move-in: …" />
+        <InquiryForm inquiryType="pre-construction" title="Tell me what you're looking for" initialMessage="I'm interested in pre-construction condos. Area: … Budget: … Bedrooms: … Move-in: …" />
       </section>
 
       <Footer />

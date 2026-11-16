@@ -5,16 +5,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Mail, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client"; // <-- Adjust path if needed
+import { supabase } from "@/integrations/supabase/client";
+import { CONTACT_TOPICS } from "@/lib/inquiries";
 
 const Contact = () => {
-  const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", message: "", topic: "buying" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const { toast } = useToast();
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -28,9 +29,10 @@ const Contact = () => {
         {
           name: form.name,
           email: form.email,
-          phone: form.phone || null, // null if left empty
+          phone: form.phone || null,
           message: form.message,
-          // status, assigned_to, listing_id, notes: will use defaults (null/new)
+          inquiry_type: form.topic,
+          page_url: window.location.href.slice(0, 500),
         },
       ]);
 
@@ -49,7 +51,7 @@ const Contact = () => {
         title: "Message sent!",
         description: "We'll reply as soon as possible.",
       });
-      setForm({ name: "", email: "", phone: "", message: "" });
+      setForm({ name: "", email: "", phone: "", message: "", topic: "buying" });
     } catch (err) {
       toast({
         title: "Error",
@@ -122,6 +124,22 @@ const Contact = () => {
                       placeholder="Your Phone"
                       className="w-full px-6 py-4 rounded-xl bg-white/20 border border-white/30 text-white placeholder-blue-200"
                     />
+                  </div>
+                  <div>
+                    <label htmlFor="topic" className="block text-sm font-medium mb-2 text-blue-100">
+                      I'm interested in
+                    </label>
+                    <select
+                      id="topic"
+                      name="topic"
+                      value={form.topic}
+                      onChange={handleChange}
+                      className="w-full px-6 py-4 rounded-xl bg-white/20 border border-white/30 text-white"
+                    >
+                      {CONTACT_TOPICS.map((t) => (
+                        <option key={t.value} value={t.value} className="text-slate-900">{t.label}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label htmlFor="message" className="block text-sm font-medium mb-2 text-blue-100">

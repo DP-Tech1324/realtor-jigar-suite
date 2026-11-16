@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { formatShowing, inquiryTypeInfo } from '@/lib/inquiries';
 
 // What happened on the site recently, newest first, built from the real tables:
 // website inquiries, consultation requests, newsletter sign-ups, changes to Jigar's
@@ -49,7 +50,7 @@ export const useActivityFeed = (limit = 15) =>
     queryKey: ['activity-feed', limit],
     queryFn: async (): Promise<Activity[]> => {
       const [inquiries, consultations, subscribers, listings, vastu] = await Promise.all([
-        supabase.from('inquiries').select('id, name, message, status, created_at, listing_id').order('created_at', { ascending: false }).limit(limit),
+        supabase.from('inquiries').select('*').order('created_at', { ascending: false }).limit(limit),
         supabase.from('consultations').select('id, name, consultation_type, status, created_at').order('created_at', { ascending: false }).limit(limit),
         supabase.from('newsletter_subscriptions').select('id, email, created_at').order('created_at', { ascending: false }).limit(limit),
         supabase
@@ -67,8 +68,12 @@ export const useActivityFeed = (limit = 15) =>
         ...(inquiries.data || []).map((i) => ({
           id: `inquiry-${i.id}`,
           kind: 'inquiry' as const,
-          title: `New inquiry from ${i.name}`,
-          detail: i.message?.slice(0, 90),
+          title: i.inquiry_type === 'showing'
+            ? `Showing request from ${i.name}`
+            : `${inquiryTypeInfo(i.inquiry_type).label} inquiry from ${i.name}`,
+          detail: i.inquiry_type === 'showing' && i.preferred_date
+            ? `Wants ${formatShowing(i.preferred_date, i.preferred_time)}`
+            : i.message?.slice(0, 90),
           at: i.created_at,
           link: '/admin/inquiries',
           needsAction: i.status === 'new',

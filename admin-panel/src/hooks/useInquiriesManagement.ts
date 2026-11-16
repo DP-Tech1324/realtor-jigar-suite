@@ -12,6 +12,11 @@ export interface Inquiry {
   status: string; // Changed from union type to string to match database
   property_id?: string;
   created_at: string;
+  inquiry_type: string;
+  preferred_date?: string;
+  preferred_time?: string;
+  page_url?: string;
+  listing?: { id: string; title: string; address: string; city: string; mls_number: string | null } | null;
 }
 
 export const useInquiriesManagement = () => {
@@ -19,6 +24,7 @@ export const useInquiriesManagement = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
   const { toast } = useToast();
 
   const fetchInquiries = async () => {
@@ -26,7 +32,7 @@ export const useInquiriesManagement = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('inquiries')
-        .select('*')
+        .select('*, listing:listings(id, title, address, city, mls_number)')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -41,6 +47,11 @@ export const useInquiriesManagement = () => {
         status: item.status || 'new',
         property_id: item.listing_id || undefined,
         created_at: item.created_at,
+        inquiry_type: item.inquiry_type || 'general',
+        preferred_date: item.preferred_date || undefined,
+        preferred_time: item.preferred_time || undefined,
+        page_url: item.page_url || undefined,
+        listing: item.listing || null,
       }));
       
       setInquiries(transformedData);
@@ -111,7 +122,8 @@ export const useInquiriesManagement = () => {
       inquiry.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       inquiry.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === '' || inquiry.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesType = typeFilter === '' || inquiry.inquiry_type === typeFilter;
+    return matchesSearch && matchesStatus && matchesType;
   });
 
   // Set up real-time subscription for inquiries
@@ -145,6 +157,8 @@ export const useInquiriesManagement = () => {
     setSearchTerm,
     statusFilter,
     setStatusFilter,
+    typeFilter,
+    setTypeFilter,
     updateInquiryStatus,
     deleteInquiry,
     refetch: fetchInquiries,
