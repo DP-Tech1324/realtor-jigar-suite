@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ChevronLeft, ChevronRight, TrendingUp, Eye } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { useFeaturedListings } from "@/hooks/useListings";
 import PropertyCard from "./PropertyCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -75,31 +75,6 @@ const FeaturedListings = () => {
               ? "The newest homes for sale across Ontario. Book a showing with Jigar for any of them."
               : "Jigar Patel's own listings and hand-picked homes across the Greater Toronto Area."}
           </p>
-        </div>
-
-        {/* Market stats */}
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
-          <div className="text-center bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <TrendingUp className="h-6 w-6 text-white" />
-            </div>
-            <div className="text-3xl font-bold text-slate-900 mb-2">98%</div>
-            <div className="text-slate-600">Sales Success Rate</div>
-          </div>
-          <div className="text-center bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Eye className="h-6 w-6 text-white" />
-            </div>
-            <div className="text-3xl font-bold text-slate-900 mb-2">500+</div>
-            <div className="text-slate-600">Properties Sold</div>
-          </div>
-          <div className="text-center bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
-            <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <ArrowRight className="h-6 w-6 text-white" />
-            </div>
-            <div className="text-3xl font-bold text-slate-900 mb-2">14</div>
-            <div className="text-slate-600">Avg Days on Market</div>
-          </div>
         </div>
 
         <div className="relative">

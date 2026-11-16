@@ -1,36 +1,37 @@
 
 import { Button } from "@/components/ui/button";
-import { Award, HomeIcon, Building2, Landmark, ArrowRight, Phone, Mail, MapPin, LineChart, Crown} from "lucide-react";
+import { Award, HomeIcon, Building2, Languages, ArrowRight, Phone, Mail, MapPin, HeartHandshake, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 
 function BioSection() {
   const navigate = useNavigate();
 
+  // From Jigar's Royal LePage profile (awards, designation, languages, areas of expertise)
   const achievements = [
     {
+      icon: Trophy,
+      number: "2023",
+      label: "Master Sales Award",
+      description: "Also received the Sales Achievement Award in 2022.",
+    },
+    {
+      icon: HeartHandshake,
+      number: "CNE®",
+      label: "Certified Negotiation Expert",
+      description: "Trained to negotiate the best terms on your offer, buying or selling.",
+    },
+    {
       icon: HomeIcon,
-      number: "500+",
-      label: "Property Sales",
-      description: "Sell properties with confidence using our marketing expertise and strategic pricing.",
+      number: "Residential",
+      label: "Buyers, sellers & leasing",
+      description: "First-time buyers, income properties, small investments and leases.",
     },
     {
       icon: Building2,
-      number: "350+",
-      label: "Property Acquisition",
-      description: "Strategic support to help you acquire the right property at the right time.",
-    },
-    {
-      icon: Landmark,
-      number: "120+",
-      label: "Commercial Real Estate",
-      description: "End-to-end solutions for retail, office, and industrial property needs.",
-    },
-    {
-      icon: LineChart,
-      number: "80+",
-      label: "Investment Properties",
-      description: "Guidance and analysis for investors seeking profitable real estate opportunities.",
+      number: "Commercial",
+      label: "Retail & small business",
+      description: "Small commercial, retail space and restaurant businesses.",
     },
   ];
 
@@ -57,21 +58,18 @@ function BioSection() {
 
             <div className="space-y-6 text-slate-600 text-lg leading-relaxed">
               <p>
-                With over 15 years of dedicated experience in the Greater Toronto Area real estate market,
-                Jigar Patel has established himself as one of the region's most trusted and accomplished realtors.
-                His unwavering commitment to excellence and personalized service has helped hundreds of families
-                navigate their real estate journey successfully.
+                A resident of the GTA since 1998, Jigar has watched its friends, families and communities grow. He
+                knows which areas offer the best environment for families, singles or seniors, and he is committed to
+                giving every client the professional service they need, expect and deserve in today's market.
               </p>
               <p>
-                Jigar's deep understanding of local market dynamics, combined with his exceptional negotiation
-                skills and meticulous attention to detail, ensures that every client achieves the best possible
-                outcome. Whether you're a first-time homebuyer, seasoned investor, or looking to sell your property,
-                Jigar provides the expertise, guidance, and support you need at every step.
+                Selling? Jigar creates a marketing plan for your home and talks you through the strategies that help
+                you make a good decision, while giving your home excellent exposure to the market. Buying your first
+                home or investing? He is with you from your first meeting right through to closing.
               </p>
               <p>
-                Born and raised in the GTA, Jigar possesses an intimate knowledge of the neighborhoods, schools,
-                and communities that make this area extraordinary. He takes immense pride in matching families
-                with homes that truly align with their lifestyle, dreams, and aspirations.
+                A CNE® Certified Negotiation Expert, Jigar received the Master Sales Award in 2023 and the Sales
+                Achievement Award in 2022. He works with clients in English, Hindi and Gujarati.
               </p>
             </div>
 
@@ -85,11 +83,17 @@ function BioSection() {
                 </div>
                 <div className="flex items-center">
                   <Mail className="h-5 w-5 text-blue-600 mr-3" />
-                  <span className="text-slate-700">jigar@jigarpatel.com</span>
+                  <span className="text-slate-700">jigar@jigarpatelrealestate.com</span>
+                </div>
+                <div className="flex items-start sm:col-span-2">
+                  <MapPin className="h-5 w-5 text-blue-600 mr-3 mt-0.5 shrink-0" />
+                  <span className="text-slate-700">
+                    Mississauga, Brampton, Burlington, Georgetown & Halton, Hamilton, Kitchener-Waterloo, Brantford and Niagara
+                  </span>
                 </div>
                 <div className="flex items-center sm:col-span-2">
-                  <MapPin className="h-5 w-5 text-blue-600 mr-3" />
-                  <span className="text-slate-700">Serving Greater Toronto Area</span>
+                  <Languages className="h-5 w-5 text-blue-600 mr-3" />
+                  <span className="text-slate-700">English · Hindi · Gujarati</span>
                 </div>
               </div>
             </div>
@@ -118,24 +122,24 @@ function BioSection() {
     <div>
       <h4 className="font-bold text-2xl mb-6 flex items-center gap-3">
         <Award className="inline h-7 w-7 text-yellow-300" />
-        Professional Certifications
+        Awards & Designations
       </h4>
       <ul className="space-y-4 text-lg">
         <li className="flex items-center gap-3">
-          <Award className="h-6 w-6 text-yellow-200" />
-          Licensed Real Estate Broker
+          <Trophy className="h-6 w-6 text-yellow-200" />
+          Master Sales Award, 2023
         </li>
         <li className="flex items-center gap-3">
-          <Award className="h-6 w-6 text-yellow-200" />
-          RECO Certified Professional
+          <Trophy className="h-6 w-6 text-yellow-200" />
+          Sales Achievement Award, 2022
         </li>
         <li className="flex items-center gap-3">
-          <LineChart className="h-6 w-6 text-blue-200" />
-          Investment Property Specialist
+          <HeartHandshake className="h-6 w-6 text-blue-200" />
+          CNE® Certified Negotiation Expert
         </li>
         <li className="flex items-center gap-3">
-          <Crown className="h-6 w-6 text-amber-300" />
-          Luxury Home Marketing Specialist
+          <Award className="h-6 w-6 text-amber-300" />
+          REALTOR®, Royal LePage Terra Realty
         </li>
       </ul>
     </div>

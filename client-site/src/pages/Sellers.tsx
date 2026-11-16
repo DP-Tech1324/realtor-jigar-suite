@@ -205,37 +205,28 @@ const Sellers = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <TrendingUp className="h-6 w-6 mr-2 text-green-600" />
-                    Proven Results
+                    Recognized Results
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between">
-                      <span>Average Sale Price vs. Asking:</span>
-                      <span className="font-bold text-green-600">102%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Average Days on Market:</span>
-                      <span className="font-bold text-green-600">18 days</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Client Satisfaction Rate:</span>
-                      <span className="font-bold text-green-600">98%</span>
-                    </div>
-                  </div>
+                  <ul className="space-y-3">
+                    <li className="flex justify-between gap-4"><span>Master Sales Award</span><span className="font-bold text-green-700">2023</span></li>
+                    <li className="flex justify-between gap-4"><span>Sales Achievement Award</span><span className="font-bold text-green-700">2022</span></li>
+                    <li className="flex justify-between gap-4"><span>Certified Negotiation Expert</span><span className="font-bold text-green-700">CNE®</span></li>
+                  </ul>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader>
-                  <CardTitle>Client Testimonial</CardTitle>
+                  <CardTitle>Your Selling Plan</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <blockquote className="text-gray-600 italic mb-4">
-                    "Jigar's marketing strategy was incredible. Our home sold in just 8 days for 5% over asking price. 
-                    His attention to detail and market knowledge made all the difference."
-                  </blockquote>
-                  <p className="font-semibold">- Jennifer & David K., Mississauga</p>
+                <CardContent className="text-gray-600 space-y-3">
+                  <p>
+                    Jigar builds a marketing plan for your home, talks you through pricing and timing strategies, and gives
+                    your listing strong exposure, including on the MLS® System.
+                  </p>
+                  <p>He works in English, Hindi and Gujarati.</p>
                 </CardContent>
               </Card>
             </div>
