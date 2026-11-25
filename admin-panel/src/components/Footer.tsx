@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Instagram, Linkedin, Twitter, Mail, Phone, MapPin } from 'lucide-react';
+import { Facebook, Instagram, Mail, Phone, MapPin } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { toast } from '@/hooks/use-toast';
@@ -86,15 +86,21 @@ const Footer = () => {
             <div className="space-y-2">
               <div className="flex items-center">
                 <Phone size={16} className="mr-2" />
-                <span>(647) 555-1234</span>
+                <a href="tel:+16478015448">(647) 801-5448</a>
+                <span className="text-white/60 text-sm ml-2">mobile</span>
+              </div>
+              <div className="flex items-center">
+                <Phone size={16} className="mr-2" />
+                <a href="tel:+19059554500">(905) 955-4500</a>
+                <span className="text-white/60 text-sm ml-2">direct</span>
               </div>
               <div className="flex items-center">
                 <Mail size={16} className="mr-2" />
-                <a href="mailto:jigar@jigarpatelrealestate.com">jigar@jigarpatelrealestate.com</a>
+                <a href="mailto:jigarpatel@royallepage.ca">jigarpatel@royallepage.ca</a>
               </div>
               <div className="flex items-start">
                 <MapPin size={16} className="mr-2 mt-1" />
-                <span>Royal LePage<br />7646 Weston Rd, Woodbridge<br />ON L4L 9J9</span>
+                <span>Royal LePage Terra Realty, Brokerage<br />2345 Argentia Road, Unit 201B<br />Mississauga, ON L5N 8K4</span>
               </div>
             </div>
           </div>
@@ -129,17 +135,11 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-bold mb-4">Connect With Me</h3>
             <div className="flex space-x-4 mb-6">
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-realtor-gold transition-colors">
+              <a href="https://www.facebook.com/p/Jigar-Patel-Realtor-100090956177328/" aria-label="Facebook" target="_blank" rel="noopener noreferrer" className="hover:text-realtor-gold transition-colors">
                 <Facebook size={20} />
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-realtor-gold transition-colors">
+              <a href="https://www.instagram.com/jigarpatelrealtor/" aria-label="Instagram" target="_blank" rel="noopener noreferrer" className="hover:text-realtor-gold transition-colors">
                 <Instagram size={20} />
-              </a>
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:text-realtor-gold transition-colors">
-                <Linkedin size={20} />
-              </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:text-realtor-gold transition-colors">
-                <Twitter size={20} />
               </a>
             </div>
             <p className="text-white/80 mb-4">

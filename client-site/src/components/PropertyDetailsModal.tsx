@@ -75,10 +75,10 @@ export default function PropertyDetailsModal({ listing, onClose }: { listing: an
           <div className="font-bold text-lg mb-1">Jigar Patel</div>
           <div className="text-blue-600 text-sm mb-1">Real Estate Agent</div>
           <div className="text-slate-600 text-sm mb-1">647-801-5448</div>
-          <div className="text-slate-600 text-sm mb-2">jigar@jigarpatelrealestate.com</div>
+          <div className="text-slate-600 text-sm mb-2">jigarpatel@royallepage.ca</div>
           <div className="flex gap-2 justify-center mt-2">
-            <a href="tel:6478015448" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2"><Phone className="w-4 h-4" />Call</a>
-            <a href="mailto:jigar@jigarpatelrealestate.com" className="bg-slate-100 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded flex items-center gap-2"><Mail className="w-4 h-4" />Email</a>
+            <a href="tel:+16478015448" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2"><Phone className="w-4 h-4" />Call</a>
+            <a href="mailto:jigarpatel@royallepage.ca" className="bg-slate-100 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded flex items-center gap-2"><Mail className="w-4 h-4" />Email</a>
           </div>
         </div>
         {/* Lead form */}

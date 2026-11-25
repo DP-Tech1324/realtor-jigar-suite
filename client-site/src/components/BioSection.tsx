@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Award, HomeIcon, Building2, Languages, ArrowRight, Phone, Mail, MapPin, HeartHandshake, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SOCIAL_LINKS } from "@/lib/social";
+import { CONTACT } from "@/lib/contact";
 
 
 function BioSection() {
@@ -80,11 +81,21 @@ function BioSection() {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="flex items-center">
                   <Phone className="h-5 w-5 text-blue-600 mr-3" />
-                  <span className="text-slate-700">(647) 801-5448</span>
+                  <a href={CONTACT.mobileTel} className="text-slate-700 hover:text-blue-600">{CONTACT.mobile}</a>
+                  <span className="text-slate-400 text-sm ml-2">mobile</span>
                 </div>
                 <div className="flex items-center">
+                  <Phone className="h-5 w-5 text-blue-600 mr-3" />
+                  <a href={CONTACT.directTel} className="text-slate-700 hover:text-blue-600">{CONTACT.direct}</a>
+                  <span className="text-slate-400 text-sm ml-2">direct</span>
+                </div>
+                <div className="flex items-center sm:col-span-2">
                   <Mail className="h-5 w-5 text-blue-600 mr-3" />
-                  <span className="text-slate-700">jigar@jigarpatelrealestate.com</span>
+                  <a href={`mailto:${CONTACT.email}`} className="text-slate-700 hover:text-blue-600">{CONTACT.email}</a>
+                </div>
+                <div className="flex items-start sm:col-span-2">
+                  <Building2 className="h-5 w-5 text-blue-600 mr-3 mt-0.5 shrink-0" />
+                  <span className="text-slate-700">{CONTACT.brokerage}, {CONTACT.officeLines.join(", ")}</span>
                 </div>
                 <div className="flex items-start sm:col-span-2">
                   <MapPin className="h-5 w-5 text-blue-600 mr-3 mt-0.5 shrink-0" />

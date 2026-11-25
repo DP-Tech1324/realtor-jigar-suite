@@ -440,10 +440,16 @@ const PropertyDetails = () => {
                     <div className="flex items-center justify-center">
                       <Phone className="h-5 w-5 mr-3 text-blue-600" />
                       <span className="font-medium">(647) 801-5448</span>
+                      <span className="text-sm text-slate-500 ml-2">mobile</span>
+                    </div>
+                    <div className="flex items-center justify-center">
+                      <Phone className="h-5 w-5 mr-3 text-blue-600" />
+                      <a href="tel:+19059554500" className="font-medium">(905) 955-4500</a>
+                      <span className="text-sm text-slate-500 ml-2">direct</span>
                     </div>
                     <div className="flex items-center justify-center">
                       <Mail className="h-5 w-5 mr-3 text-blue-600" />
-                      <span className="text-sm">jigar@jigarpatelrealestate.com</span>
+                      <span className="text-sm">jigarpatel@royallepage.ca</span>
                     </div>
                   </div>
                   
@@ -455,7 +461,7 @@ const PropertyDetails = () => {
                       </a>
                     </Button>
                     <Button asChild variant="outline" className="w-full text-lg py-3">
-                      <a href={`mailto:jigar@jigarpatelrealestate.com?subject=${encodeURIComponent(`Inquiry: ${listing.title}`)}&body=${encodeURIComponent(`Hi Jigar,\n\nI'm interested in ${listing.title} (${window.location.href}).\n\n`)}`}>
+                      <a href={`mailto:jigarpatel@royallepage.ca?subject=${encodeURIComponent(`Inquiry: ${listing.title}`)}&body=${encodeURIComponent(`Hi Jigar,\n\nI'm interested in ${listing.title} (${window.location.href}).\n\n`)}`}>
                         <Mail className="h-5 w-5 mr-2" />
                         Send Email
                       </a>
