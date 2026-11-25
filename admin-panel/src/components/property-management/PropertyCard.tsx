@@ -78,7 +78,7 @@ export function PropertyCard({ property, onEdit, onDelete, onRemoveFromList, onT
             </Badge>
           )}
           {property.featured && (
-            <Badge className="bg-gold-100 text-gold-800">
+            <Badge className="bg-amber-100 text-amber-800">
               Featured
             </Badge>
           )}
