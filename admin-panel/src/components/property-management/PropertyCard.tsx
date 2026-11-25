@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Eye, MapPin, Bed, Bath, Square, Home } from 'lucide-react';
+import { Edit, Trash2, Eye, EyeOff, MapPin, Bed, Bath, Square, Home } from 'lucide-react';
 import { Property } from '@/types/Property';
 
 interface PropertyCardProps {
@@ -70,7 +70,7 @@ export function PropertyCard({ property, onEdit, onDelete, onRemoveFromList, onT
         
         <div className="absolute top-2 left-2 flex gap-2">
           <Badge className={getStatusColor(property.status)}>
-            {property.status}
+            {property.source === 'ddf' ? (property.status === 'published' ? 'on website' : 'hidden') : property.status}
           </Badge>
           {property.market_status && (
             <Badge className={getMarketStatusColor(marketLabel)}>
@@ -147,7 +147,25 @@ export function PropertyCard({ property, onEdit, onDelete, onRemoveFromList, onT
               Edit
             </Button>
             
-            {/* MLS® listings come and go with the daily sync, so they can't be unpublished or deleted here */}
+            {/* MLS® listings come and go with the daily sync, so they can't be deleted here. Hiding one
+                (status draft) takes it off the whole website; the sync keeps it hidden. */}
+            {property.source === 'ddf' && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  if (property.status === 'draft'
+                    || window.confirm('Hide this listing from the website (homepage, Featured Listings and search)? You can show it again any time.')) {
+                    onToggleStatus(property.id, property.status);
+                  }
+                }}
+                className="flex-1"
+              >
+                {property.status === 'published'
+                  ? <><EyeOff className="h-4 w-4 mr-1" />Hide</>
+                  : <><Eye className="h-4 w-4 mr-1" />Show</>}
+              </Button>
+            )}
             {property.source === 'ddf' && !property.is_own_listing && onRemoveFromList && (
               <Button
                 size="sm"
