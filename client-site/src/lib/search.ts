@@ -96,7 +96,7 @@ export function applyFilters<Q>(query: Q, f: SearchFilters): Q {
   // An exact MLS® number finds the listing whatever its type
   if (f.propertyType) q = q.eq('property_type', f.propertyType);
   else if (f.category === 'commercial') q = q.eq('property_type', 'commercial');
-  else if (kind !== 'mls') q = q.neq('property_type', 'commercial'); // homes unless commercial is asked for
+  else if (kind !== 'mls' && !f.featured) q = q.neq('property_type', 'commercial'); // homes unless commercial is asked for
 
   if (kind === 'postal') q = q.like('postal_compact', `${where.replace(/\s/g, '').toUpperCase()}%`);
   else if (kind === 'mls') q = q.eq('mls_number', where.toUpperCase());
@@ -111,7 +111,8 @@ export function applyFilters<Q>(query: Q, f: SearchFilters): Q {
   if (f.keywords.trim()) q = q.textSearch('search_tsv', f.keywords.trim(), { type: 'websearch', config: 'english' });
   if (f.facing) q = q.eq('facing', f.facing);
   if (f.vastu) q = q.gte('vastu_score', 7);
-  if (f.featured) q = q.eq('is_featured', true);
+  // Same set as the homepage section: Jigar's own listings plus ones marked featured in the admin
+  if (f.featured) q = q.or('is_own_listing.eq.true,is_featured.eq.true');
   return q as Q;
 }
 
@@ -133,9 +134,9 @@ export function liveParams(f: SearchFilters, page: number): Record<string, strin
 // Short human summary for the results line, e.g. "Condos for rent in Brampton"
 export function describeSearch(f: SearchFilters): string {
   const type = PROPERTY_TYPES.find((t) => t.value === f.propertyType)?.label
-    ?? (f.category === 'commercial' ? 'Commercial properties' : 'Homes');
+    ?? (f.category === 'commercial' ? 'Commercial properties' : f.featured ? 'Listings' : 'Homes');
   const deal = f.saleType === 'rent' ? ' for rent' : f.saleType === 'sale' ? ' for sale' : '';
   if (locationKind(f.location) === 'mls') return `MLS® ${f.location.trim().toUpperCase()}`;
   const place = f.location ? ` in ${f.location}` : isLiveSearch(f) ? ` in ${PROVINCE_LABELS[f.province]}` : '';
-  return `${f.featured ? 'Featured: ' : ''}${type}${deal}${place}`;
+  return `${f.featured ? 'Featured ' : ''}${type}${deal}${place}`;
 }

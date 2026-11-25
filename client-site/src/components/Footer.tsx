@@ -1,13 +1,10 @@
 import {
-  Facebook,
-  Instagram,
-  Linkedin,
   Mail,
   Phone,
   MapPin,
-  Youtube,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { SOCIAL_LINKS } from "@/lib/social";
 
 // Footer links (update as needed for your app's actual routes)
 const quickLinks = [
@@ -26,13 +23,6 @@ const services = [
   //{ label: "Investment Properties", href: "/investment-properties" },
   { label: "First-Time Buyers", href: "/buyers/first-time-guide" },
   //{ label: "Luxury Homes", href: "/luxury-homes" },
-];
-
-const socials = [
-  { href: "#", icon: Facebook, label: "Facebook" },
-  { href: "#", icon: Instagram, label: "Instagram" },
-  { href: "#", icon: Linkedin, label: "LinkedIn" },
-  { href: "#", icon: Youtube, label: "YouTube" },
 ];
 
 const Footer = () => {
@@ -151,11 +141,14 @@ const Footer = () => {
         <div className="border-t border-gray-800 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex space-x-4">
-              {socials.map((social) => (
+              {SOCIAL_LINKS.map((social) => (
                 <a
                   key={social.label}
                   href={social.href}
                   aria-label={social.label}
+                  title={social.label}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="footer-social"
                 >
                   <social.icon className="h-6 w-6" />

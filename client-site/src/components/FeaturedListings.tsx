@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Eye } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { useFeaturedListings } from "@/hooks/useListings";
 import PropertyCard from "./PropertyCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -135,6 +135,30 @@ const FeaturedListings = () => {
                   </Button>
                 </div>
               )}
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                {data?.curated && (
+                  <Button
+                    size="lg"
+                    onClick={() => navigate('/listings?featured=1')}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 rounded-xl"
+                  >
+                    View All Featured Listings
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                )}
+                <Button
+                  size="lg"
+                  variant={data?.curated ? "outline" : "default"}
+                  onClick={() => navigate('/listings')}
+                  className={data?.curated
+                    ? "border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-semibold px-8 rounded-xl"
+                    : "bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 rounded-xl"}
+                >
+                  Browse All Listings
+                  {!data?.curated && <ArrowRight className="ml-2 h-5 w-5" />}
+                </Button>
+              </div>
             </>
           ) : (
             <div className="text-center py-16">

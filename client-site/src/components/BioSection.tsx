@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Award, HomeIcon, Building2, Languages, ArrowRight, Phone, Mail, MapPin, HeartHandshake, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { SOCIAL_LINKS } from "@/lib/social";
 
 
 function BioSection() {
@@ -95,6 +96,20 @@ function BioSection() {
                   <Languages className="h-5 w-5 text-blue-600 mr-3" />
                   <span className="text-slate-700">English · Hindi · Gujarati</span>
                 </div>
+              </div>
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-200">
+                {SOCIAL_LINKS.map((social) => (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-full bg-white border border-slate-200 px-3 py-1.5 text-sm text-slate-700 hover:border-blue-600 hover:text-blue-600 transition-colors"
+                  >
+                    <social.icon className="h-4 w-4" />
+                    {social.label}
+                  </a>
+                ))}
               </div>
             </div>
 
