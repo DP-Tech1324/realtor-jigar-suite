@@ -5,7 +5,7 @@ const AGENT = {
   name: "JIGAR PATEL",
   title: "Real Estate Agent",
   phone: "647-801-5448",
-   email: "jigar@jigarpatelrealestate.com",
+   email: "jigarpatel@royallepage.ca",
   photo: "/images/agents/IMG_9799.JPG",            // Place agent photo in public/images/
   brokerageLogo: "/images/logos/Rpl-Logo.png" // Place logo in public/images/ or remove if not needed
 };

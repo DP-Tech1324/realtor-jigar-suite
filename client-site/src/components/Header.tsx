@@ -133,7 +133,7 @@ const Header = () => {
             </div>
             <div className="hidden md:flex items-center space-x-2">
               <Mail className="h-4 w-4" />
-              <span>jigar@jigarpatelrealestate.com</span>
+              <a href="mailto:jigarpatel@royallepage.ca" className="hover:underline">jigarpatel@royallepage.ca</a>
             </div>
           </div>
           <div className="text-yellow-400 font-semibold">

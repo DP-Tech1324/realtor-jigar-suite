@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { SOCIAL_LINKS } from "@/lib/social";
+import { CONTACT } from "@/lib/contact";
 
 // Footer links (update as needed for your app's actual routes)
 const quickLinks = [
@@ -73,15 +74,24 @@ const Footer = () => {
             <div className="space-y-2">
               <div className="flex items-center">
                 <Phone className="h-5 w-5 mr-3 text-blue-400" />
-                <a href="tel:+16478015448" className="text-base hover:text-blue-300">(647) 801-5448</a>
+                <a href={CONTACT.mobileTel} className="text-base hover:text-blue-300">{CONTACT.mobile}</a>
+                <span className="text-gray-400 text-sm ml-2">mobile</span>
+              </div>
+              <div className="flex items-center">
+                <Phone className="h-5 w-5 mr-3 text-blue-400" />
+                <a href={CONTACT.directTel} className="text-base hover:text-blue-300">{CONTACT.direct}</a>
+                <span className="text-gray-400 text-sm ml-2">direct · fax {CONTACT.fax}</span>
               </div>
               <div className="flex items-center">
                 <Mail className="h-5 w-5 mr-3 text-blue-400" />
-                <span className="text-base">jigar@jigarpatelrealestate.com</span>
+                <a href={`mailto:${CONTACT.email}`} className="text-base hover:text-blue-300">{CONTACT.email}</a>
               </div>
-              <div className="flex items-center">
-                <MapPin className="h-5 w-5 mr-3 text-blue-400" />
-                <span className="text-base">Serving Greater Toronto Area</span>
+              <div className="flex items-start">
+                <MapPin className="h-5 w-5 mr-3 mt-0.5 text-blue-400 shrink-0" />
+                <span className="text-base">
+                  {CONTACT.brokerage}
+                  {CONTACT.officeLines.map((line) => <span key={line} className="block text-gray-300">{line}</span>)}
+                </span>
               </div>
             </div>
           </div>
@@ -157,7 +167,7 @@ const Footer = () => {
             </div>
             <div className="text-center md:text-right text-gray-400 text-sm">
               <p>
-                &copy; 2024 <span className="font-semibold">Jigar Patel Real Estate</span>. All rights reserved.
+                &copy; {new Date().getFullYear()} <span className="font-semibold">Jigar Patel Real Estate</span>. All rights reserved.
               </p>
               <p className="mt-1">
                 Licensed Real Estate Professional in Ontario

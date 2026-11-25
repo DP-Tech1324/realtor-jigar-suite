@@ -44,7 +44,7 @@ export default function PropertyDetailsContent({ listing }) {
             <div className="font-bold text-blue-700">Jigar Patel</div>
             <div className="text-sm text-slate-500">Real Estate Agent</div>
             <div className="text-sm text-slate-700">📞 (647) 801-5448</div>
-            <div className="text-sm text-slate-700">✉️ jigar@jigarpatelrealestate.com</div>
+            <div className="text-sm text-slate-700">✉️ jigarpatel@royallepage.ca</div>
           </div>
         </div>
       </div>
