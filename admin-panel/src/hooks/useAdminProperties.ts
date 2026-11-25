@@ -150,7 +150,12 @@ export function useAdminProperties() {
       setProperties((prev) =>
         prev.map((p) => (p.id === id ? { ...p, status: newStatus } : p))
       );
-      toast({ title: `Property marked as ${newStatus}` });
+      const ddf = properties.find((p) => p.id === id)?.source === 'ddf';
+      toast({
+        title: ddf
+          ? (newStatus === 'draft' ? 'Hidden from the website' : 'Showing on the website')
+          : `Property marked as ${newStatus}`,
+      });
     } else if (error) {
       toast({ title: "Status update failed", description: error.message, variant: "destructive" });
     }
